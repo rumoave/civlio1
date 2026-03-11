@@ -1,0 +1,339 @@
+{
+  "global": {
+    "color": {
+      "bg": {
+        "value": "#FFFFFF",
+        "type": "color",
+        "description": "Page background"
+      },
+      "bg2": {
+        "value": "#F4F5F7",
+        "type": "color",
+        "description": "Surface / input background"
+      },
+      "card": {
+        "value": "#FFFFFF",
+        "type": "color",
+        "description": "Card background"
+      },
+      "navy": {
+        "value": "#1B2838",
+        "type": "color",
+        "description": "Primary navy — headers, CTAs"
+      },
+      "navyLight": {
+        "value": "#243447",
+        "type": "color",
+        "description": "Navy gradient end"
+      },
+      "text": {
+        "value": "#1B2838",
+        "type": "color",
+        "description": "Primary text"
+      },
+      "text2": {
+        "value": "#6B7280",
+        "type": "color",
+        "description": "Secondary text"
+      },
+      "textMuted": {
+        "value": "#9CA3AF",
+        "type": "color",
+        "description": "Muted / placeholder text"
+      },
+      "textWhite": {
+        "value": "#FFFFFF",
+        "type": "color",
+        "description": "Text on dark backgrounds"
+      },
+      "accent": {
+        "value": "#E84855",
+        "type": "color",
+        "description": "Red accent — alerts, Republican, error"
+      },
+      "accent2": {
+        "value": "#2563EB",
+        "type": "color",
+        "description": "Blue accent — links, Democrat, CTAs"
+      },
+      "border": {
+        "value": "#E5E7EB",
+        "type": "color",
+        "description": "Dividers and card borders"
+      },
+      "success": {
+        "value": "#059669",
+        "type": "color",
+        "description": "Yea votes, signed into law, positive"
+      },
+      "error": {
+        "value": "#E84855",
+        "type": "color",
+        "description": "Nay votes, failed, negative"
+      },
+      "party": {
+        "democrat": {
+          "value": "#2563EB",
+          "type": "color"
+        },
+        "republican": {
+          "value": "#E84855",
+          "type": "color"
+        },
+        "independent": {
+          "value": "#8B5CF6",
+          "type": "color"
+        }
+      },
+      "status": {
+        "introduced": {
+          "value": "#9CA3AF",
+          "type": "color"
+        },
+        "inCommittee": {
+          "value": "#D97706",
+          "type": "color"
+        },
+        "onTheFloor": {
+          "value": "#2563EB",
+          "type": "color"
+        },
+        "passedHouse": {
+          "value": "#2563EB",
+          "type": "color"
+        },
+        "passedSenate": {
+          "value": "#2563EB",
+          "type": "color"
+        },
+        "signedIntoLaw": {
+          "value": "#059669",
+          "type": "color"
+        },
+        "failed": {
+          "value": "#E84855",
+          "type": "color"
+        }
+      }
+    },
+
+    "typography": {
+      "fontFamily": {
+        "display": {
+          "value": "Fraunces",
+          "type": "fontFamilies",
+          "description": "Serif display — headlines, bill titles, large numbers"
+        },
+        "body": {
+          "value": "Space Grotesk",
+          "type": "fontFamilies",
+          "description": "Sans-serif — body text, labels, UI copy"
+        },
+        "mono": {
+          "value": "DM Mono",
+          "type": "fontFamilies",
+          "description": "Monospace — bill numbers, dates, stats, tags"
+        }
+      },
+      "fontSize": {
+        "xs": { "value": "9", "type": "fontSizes" },
+        "sm": { "value": "10", "type": "fontSizes" },
+        "base": { "value": "11", "type": "fontSizes" },
+        "md": { "value": "12", "type": "fontSizes" },
+        "lg": { "value": "13", "type": "fontSizes" },
+        "xl": { "value": "16", "type": "fontSizes" },
+        "2xl": { "value": "18", "type": "fontSizes" },
+        "3xl": { "value": "20", "type": "fontSizes" },
+        "4xl": { "value": "22", "type": "fontSizes" },
+        "5xl": { "value": "26", "type": "fontSizes" },
+        "6xl": { "value": "32", "type": "fontSizes" },
+        "hero": { "value": "38", "type": "fontSizes" }
+      },
+      "fontWeight": {
+        "regular": { "value": "400", "type": "fontWeights" },
+        "medium": { "value": "500", "type": "fontWeights" },
+        "semibold": { "value": "600", "type": "fontWeights" },
+        "bold": { "value": "700", "type": "fontWeights" }
+      },
+      "lineHeight": {
+        "tight": { "value": "1", "type": "lineHeights" },
+        "snug": { "value": "1.3", "type": "lineHeights" },
+        "normal": { "value": "1.45", "type": "lineHeights" },
+        "relaxed": { "value": "1.6", "type": "lineHeights" },
+        "loose": { "value": "1.75", "type": "lineHeights" }
+      },
+      "letterSpacing": {
+        "tight": { "value": "-1", "type": "letterSpacing" },
+        "normal": { "value": "0", "type": "letterSpacing" },
+        "wide": { "value": "0.5", "type": "letterSpacing" },
+        "wider": { "value": "1", "type": "letterSpacing" },
+        "widest": { "value": "1.5", "type": "letterSpacing" }
+      }
+    },
+
+    "textStyle": {
+      "headline": {
+        "value": {
+          "fontFamily": "{typography.fontFamily.display}",
+          "fontWeight": "{typography.fontWeight.regular}",
+          "fontSize": "{typography.fontSize.3xl}",
+          "lineHeight": "{typography.lineHeight.snug}"
+        },
+        "type": "typography",
+        "description": "Bill titles and section headlines"
+      },
+      "heroHeadline": {
+        "value": {
+          "fontFamily": "{typography.fontFamily.display}",
+          "fontWeight": "{typography.fontWeight.regular}",
+          "fontSize": "{typography.fontSize.hero}",
+          "lineHeight": "{typography.lineHeight.tight}"
+        },
+        "type": "typography",
+        "description": "Market odds probability, large stat numbers"
+      },
+      "cardTitle": {
+        "value": {
+          "fontFamily": "{typography.fontFamily.display}",
+          "fontWeight": "{typography.fontWeight.regular}",
+          "fontSize": "{typography.fontSize.lg}",
+          "lineHeight": "{typography.lineHeight.snug}"
+        },
+        "type": "typography",
+        "description": "Compact bill card titles"
+      },
+      "body": {
+        "value": {
+          "fontFamily": "{typography.fontFamily.body}",
+          "fontWeight": "{typography.fontWeight.regular}",
+          "fontSize": "{typography.fontSize.md}",
+          "lineHeight": "{typography.lineHeight.loose}"
+        },
+        "type": "typography",
+        "description": "Body copy and summaries"
+      },
+      "bodySmall": {
+        "value": {
+          "fontFamily": "{typography.fontFamily.body}",
+          "fontWeight": "{typography.fontWeight.regular}",
+          "fontSize": "{typography.fontSize.lg}",
+          "lineHeight": "{typography.lineHeight.normal}"
+        },
+        "type": "typography",
+        "description": "Secondary body text, member names"
+      },
+      "label": {
+        "value": {
+          "fontFamily": "{typography.fontFamily.body}",
+          "fontWeight": "{typography.fontWeight.semibold}",
+          "fontSize": "{typography.fontSize.base}",
+          "lineHeight": "{typography.lineHeight.snug}",
+          "letterSpacing": "{typography.letterSpacing.wide}"
+        },
+        "type": "typography",
+        "description": "Section labels, tab labels"
+      },
+      "tag": {
+        "value": {
+          "fontFamily": "{typography.fontFamily.mono}",
+          "fontWeight": "{typography.fontWeight.bold}",
+          "fontSize": "{typography.fontSize.xs}",
+          "letterSpacing": "{typography.letterSpacing.wider}",
+          "textCase": "UPPER"
+        },
+        "type": "typography",
+        "description": "Status badges, section labels in mono"
+      },
+      "billNumber": {
+        "value": {
+          "fontFamily": "{typography.fontFamily.mono}",
+          "fontWeight": "{typography.fontWeight.medium}",
+          "fontSize": "{typography.fontSize.base}",
+          "letterSpacing": "{typography.letterSpacing.normal}"
+        },
+        "type": "typography",
+        "description": "H.R. 123, S. 456 bill identifiers"
+      },
+      "datestamp": {
+        "value": {
+          "fontFamily": "{typography.fontFamily.mono}",
+          "fontWeight": "{typography.fontWeight.regular}",
+          "fontSize": "{typography.fontSize.xs}",
+          "letterSpacing": "{typography.letterSpacing.normal}"
+        },
+        "type": "typography",
+        "description": "Dates and timestamps"
+      },
+      "statLarge": {
+        "value": {
+          "fontFamily": "{typography.fontFamily.mono}",
+          "fontWeight": "{typography.fontWeight.bold}",
+          "fontSize": "{typography.fontSize.6xl}",
+          "lineHeight": "{typography.lineHeight.tight}",
+          "letterSpacing": "{typography.letterSpacing.tight}"
+        },
+        "type": "typography",
+        "description": "Yea / Nay vote counts"
+      }
+    },
+
+    "spacing": {
+      "0": { "value": "0", "type": "spacing" },
+      "1": { "value": "2", "type": "spacing" },
+      "2": { "value": "4", "type": "spacing" },
+      "3": { "value": "6", "type": "spacing" },
+      "4": { "value": "8", "type": "spacing" },
+      "5": { "value": "10", "type": "spacing" },
+      "6": { "value": "12", "type": "spacing" },
+      "7": { "value": "14", "type": "spacing" },
+      "8": { "value": "16", "type": "spacing" },
+      "10": { "value": "20", "type": "spacing" },
+      "12": { "value": "24", "type": "spacing" },
+      "14": { "value": "28", "type": "spacing" },
+      "16": { "value": "30", "type": "spacing" }
+    },
+
+    "borderRadius": {
+      "none": { "value": "0", "type": "borderRadius" },
+      "sm": { "value": "4", "type": "borderRadius" },
+      "md": { "value": "10", "type": "borderRadius" },
+      "lg": { "value": "12", "type": "borderRadius" },
+      "xl": { "value": "14", "type": "borderRadius" },
+      "2xl": { "value": "16", "type": "borderRadius" },
+      "3xl": { "value": "18", "type": "borderRadius" },
+      "4xl": { "value": "20", "type": "borderRadius" },
+      "pill": { "value": "100", "type": "borderRadius" },
+      "device": { "value": "44", "type": "borderRadius", "description": "iPhone-style device frame corner" }
+    },
+
+    "shadow": {
+      "card": {
+        "value": "0 1px 4px rgba(0,0,0,0.08)",
+        "type": "boxShadow",
+        "description": "Standard card elevation"
+      },
+      "cardMd": {
+        "value": "0 1px 3px rgba(0,0,0,0.06)",
+        "type": "boxShadow"
+      },
+      "device": {
+        "value": "0 25px 80px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,0,0,0.05)",
+        "type": "boxShadow",
+        "description": "Outer device frame shadow"
+      }
+    },
+
+    "dimension": {
+      "deviceWidth": { "value": "375", "type": "sizing", "description": "iPhone frame width" },
+      "deviceHeight": { "value": "812", "type": "sizing", "description": "iPhone frame height" },
+      "tabBarHeight": { "value": "60", "type": "sizing" },
+      "avatarSm": { "value": "14", "type": "sizing" },
+      "avatarMd": { "value": "28", "type": "sizing" },
+      "avatarLg": { "value": "32", "type": "sizing" },
+      "avatarXl": { "value": "72", "type": "sizing" },
+      "voteBarHeight": { "value": "5", "type": "sizing" },
+      "partyDotSm": { "value": "6", "type": "sizing" },
+      "partyDotMd": { "value": "8", "type": "sizing" }
+    }
+  }
+}

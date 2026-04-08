@@ -15,6 +15,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build"
   },
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  },
   "browserslist": {
     "production": [
       ">0.2%",

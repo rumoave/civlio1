@@ -395,10 +395,10 @@ class EnhancedSyncService {
 
     // Browser notification
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Civly Update', {
+      new Notification('Civlio Update', {
         body: message,
-        icon: '/civly-icon.png',
-        tag: `civly-${syncType}-${Date.now()}`,
+        icon: '/civlio-icon.png',
+        tag: `civlio-${syncType}-${Date.now()}`,
       });
     }
 

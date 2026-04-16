@@ -1105,9 +1105,8 @@ const PANEL_DEFS={
   bills_grid:{label:"Active Bills",desc:"Top active legislation",needsConfig:false},
   watchlist:{label:"My Watchlist",desc:"Your saved bills & members",needsConfig:false},
   leg_chart:{label:"Legislative Progress",desc:"Bills by stage — bar chart",needsConfig:false},
-  leg_stats:{label:"Legislative Stats",desc:"Bill activity trend — line chart",needsConfig:false},
-  voting_dist:{label:"Voting Distribution",desc:"Yea/Nay breakdown — donut",needsConfig:false},
   pipeline:{label:"Bill Pipeline",desc:"Kanban view of all active bills",needsConfig:false},
+  markets:{label:"Markets",desc:"Legislative impact on financial markets by sector",needsConfig:false},
   activity:{label:"Activity Feed",desc:"Recent legislative actions",needsConfig:false},
   leaderboard:{label:"Member Activity",desc:"Most active members ranked",needsConfig:false},
   party_votes:{label:"Party Line Votes",desc:"D vs R split on every recorded vote",needsConfig:false},
@@ -1116,18 +1115,18 @@ const PANEL_DEFS={
 };
 // w is 1–12 (12-column grid). Old 1/2/3 system: 1→4, 2→8, 3→12. Min width = 2 cols.
 const DEFAULT_PANELS=[
-  {id:"dp-pipe",type:"pipeline",config:{},w:12},
-  {id:"dp0",type:"leg_chart",config:{},w:7},
-  {id:"dp0b",type:"leg_stats",config:{},w:5},
+  {id:"dp-pipe",type:"pipeline",config:{},w:5},
+  {id:"dp0b",type:"markets",config:{},w:4},
+  {id:"dp-act",type:"activity",config:{},w:3},
+  {id:"dp-lead",type:"leaderboard",config:{},w:4},
+  {id:"dp-funnel",type:"bill_funnel",config:{},w:4},
+  {id:"dp0",type:"leg_chart",config:{},w:4},
   {id:"dp1",type:"calendar",config:{},w:5},
-  {id:"dp-act",type:"activity",config:{},w:4},
-  {id:"dp-lead",type:"leaderboard",config:{},w:3},
-  {id:"dp2b",type:"voting_dist",config:{},w:4},
+  {id:"dp-party",type:"party_votes",config:{},w:4},
+  {id:"dp-score",type:"vote_scorecard",config:{},w:7},
+  {id:"dp2b",type:"leg_chart",config:{},w:4},
   {id:"dp3",type:"trending",config:{},w:4},
   {id:"dp3b",type:"watchlist",config:{},w:4},
-  {id:"dp-party",type:"party_votes",config:{},w:5},
-  {id:"dp-score",type:"vote_scorecard",config:{},w:7},
-  {id:"dp-funnel",type:"bill_funnel",config:{},w:4},
 ];
 const BILL_NEWS={
   b1:[
@@ -1211,99 +1210,86 @@ const PANEL_ICON={
   party_votes:<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="2" y1="6" x2="22" y2="6"/><line x1="2" y1="12" x2="16" y2="12"/><line x1="2" y1="18" x2="12" y2="18"/></svg>,
   vote_scorecard:<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>,
   bill_funnel:<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>,
+  markets:<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
 };
 function PanelShell({panel,onRemove,onResize,onMoveUp,onMoveDown,isFirst,isLast,editMode,locked,children,
   onResizeStart,onDragHeaderDown,panelRef,isDragging,isDragOver}){
   const def=PANEL_DEFS[panel.type]||{label:panel.type};
   const accentCol=PANEL_ACCENT[panel.type]||C.navy;
-  const icon=PANEL_ICON[panel.type]||null;
-  // Edit button style — light on dark header
-  const ebs={all:"unset",cursor:"pointer",width:24,height:24,display:"inline-flex",alignItems:"center",justifyContent:"center",borderRadius:6,transition:"background 0.12s",color:"rgba(255,255,255,0.55)"};
+  const ebs={all:"unset",cursor:"pointer",width:22,height:22,display:"inline-flex",alignItems:"center",justifyContent:"center",borderRadius:5,transition:"all 0.12s",color:C.textM};
   return(
     <div
       ref={panelRef}
+      className="civly-panel"
       style={{
         gridColumn:"span "+panel.w,
         background:"#fff",
-        borderRadius:14,
-        border:"1px solid "+(isDragOver?"rgba(26,77,184,0.35)":C.border),
+        borderRadius:12,
+        border:"1px solid "+C.border,
         overflow:"hidden",
         display:"flex",flexDirection:"column",
         minHeight:180,
-        transition:"box-shadow 0.22s cubic-bezier(0.22,1,0.36,1),opacity 0.18s,transform 0.22s cubic-bezier(0.22,1,0.36,1)",
-        opacity:isDragging?0.18:1,
+        transition:"box-shadow 0.2s ease,opacity 0.18s,transform 0.2s ease",
+        opacity:isDragging?0.15:1,
         position:"relative",
-        boxShadow:isDragOver?"0 0 0 3px rgba(26,77,184,0.1),0 12px 36px rgba(15,29,58,0.14)":"0 1px 2px rgba(15,29,58,0.04),0 4px 12px rgba(15,29,58,0.05)",
-        transform:isDragging?"scale(0.97) rotate(1deg)":"scale(1)",
+        boxShadow:"0 1px 3px rgba(15,29,58,0.05)",
+        transform:isDragging?"scale(0.97) rotate(0.8deg)":"none",
       }}
-      onMouseEnter={e=>{if(!isDragging){e.currentTarget.style.boxShadow="0 4px 16px rgba(15,29,58,0.09),0 12px 36px rgba(15,29,58,0.07)";}}}
-      onMouseLeave={e=>{e.currentTarget.style.boxShadow="0 1px 2px rgba(15,29,58,0.04),0 4px 12px rgba(15,29,58,0.05)";}}
+      onMouseEnter={e=>{if(!isDragging){e.currentTarget.style.boxShadow="0 4px 20px rgba(15,29,58,0.08)";}}}
+      onMouseLeave={e=>{e.currentTarget.style.boxShadow="0 1px 3px rgba(15,29,58,0.05)";}}
     >
-      {/* Colored top accent bar */}
-      <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:accentCol,zIndex:2}}/>
-
-      {/* Dark header */}
+      {/* Header — same white surface, separated by a hairline */}
       <div
         onPointerDown={e=>onDragHeaderDown(e,panel.id)}
         style={{
           display:"flex",alignItems:"center",
-          padding:"10px 14px 9px",
-          paddingTop:13,
-          background:"#0a1628",
-          gap:8,flexShrink:0,
-          cursor:locked?"default":"grab",userSelect:"none",
-          minHeight:44,
-          position:"relative",
+          padding:"13px 16px 12px",
+          background:"#fff",
+          borderBottom:"1px solid #f0f2f7",
+          gap:10,flexShrink:0,
+          cursor:locked?"default":"grab",
+          userSelect:"none",
         }}
         title={locked?"Unlock layout to drag":"Drag to reorder"}
       >
-        {/* Icon badge */}
-        {icon&&(
-          <div style={{width:24,height:24,borderRadius:7,background:accentCol+"28",border:"1px solid "+accentCol+"40",display:"flex",alignItems:"center",justifyContent:"center",color:accentCol,flexShrink:0}}>
-            {icon}
-          </div>
-        )}
-        {/* Title */}
+        {/* Title block */}
         <div style={{flex:1,minWidth:0}}>
-          <span style={{fontFamily:F.mono,fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.92)",letterSpacing:0.6,textTransform:"uppercase",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+          <div style={{fontFamily:F.display,fontSize:13,fontWeight:600,color:C.text,letterSpacing:"-0.2px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:1.2}}>
             {def.label}
-          </span>
+          </div>
           {panel.config?.name&&(
-            <span style={{fontFamily:F.body,fontSize:9,color:"rgba(255,255,255,0.38)",fontWeight:400,letterSpacing:0.2,display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:0.5}}>
+            <div style={{fontFamily:F.body,fontSize:10,color:C.textM,fontWeight:400,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
               {panel.config.name}
-            </span>
+            </div>
           )}
         </div>
-        {/* Drag grip dots */}
-        {!locked&&(
-          <div style={{display:"flex",alignItems:"center",flexShrink:0,opacity:0.22,marginRight:editMode?2:0}}>
-            <svg width="8" height="12" viewBox="0 0 8 12" fill="rgba(255,255,255,0.9)">
-              <circle cx="2" cy="2" r="1.3"/><circle cx="6" cy="2" r="1.3"/>
-              <circle cx="2" cy="6" r="1.3"/><circle cx="6" cy="6" r="1.3"/>
-              <circle cx="2" cy="10" r="1.3"/><circle cx="6" cy="10" r="1.3"/>
-            </svg>
-          </div>
+        {/* Drag grip — very subtle, only when unlocked */}
+        {!locked&&!editMode&&(
+          <svg width="8" height="12" viewBox="0 0 8 12" fill={C.border} style={{flexShrink:0,opacity:0.6}}>
+            <circle cx="2" cy="2" r="1.2"/><circle cx="6" cy="2" r="1.2"/>
+            <circle cx="2" cy="6" r="1.2"/><circle cx="6" cy="6" r="1.2"/>
+            <circle cx="2" cy="10" r="1.2"/><circle cx="6" cy="10" r="1.2"/>
+          </svg>
         )}
         {/* Edit controls */}
         {editMode&&(
           <div style={{display:"flex",alignItems:"center",gap:1}} onPointerDown={e=>e.stopPropagation()}>
-            <button onClick={()=>onResize(panel.id)} title={panel.w>=12?"Shrink":panel.w>=8?"Full width":"Expand"} style={ebs}
-              onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.1)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                {panel.w>=8?<><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></>:<><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></>}
-              </svg>
+            <button onClick={()=>onResize(panel.id)} title="Resize" style={ebs}
+              onMouseEnter={e=>e.currentTarget.style.background=C.bg2} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
             </button>
             {!isFirst&&<button onClick={()=>onMoveUp(panel.id)} style={ebs}
-              onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.1)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              onMouseEnter={e=>e.currentTarget.style.background=C.bg2} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
             </button>}
             {!isLast&&<button onClick={()=>onMoveDown(panel.id)} style={ebs}
-              onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.1)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              onMouseEnter={e=>e.currentTarget.style.background=C.bg2} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </button>}
-            <button onClick={()=>onRemove(panel.id)} style={{...ebs,color:"rgba(255,100,100,0.7)"}}
-              onMouseEnter={e=>{e.currentTarget.style.background="rgba(220,38,38,0.2)";e.currentTarget.style.color="#ff6b6b";}}
-              onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color="rgba(255,100,100,0.7)";}}>
+            <button onClick={()=>onRemove(panel.id)}
+              style={{...ebs,color:C.textM}}
+              onMouseEnter={e=>{e.currentTarget.style.background="#fef2f2";e.currentTarget.style.color="#dc2626";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=C.textM;}}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
@@ -1311,17 +1297,17 @@ function PanelShell({panel,onRemove,onResize,onMoveUp,onMoveDown,isFirst,isLast,
       </div>
 
       {/* Content */}
-      <div style={{flex:1,overflowY:"auto",background:"#fff"}} className="civly-scroll">{children}</div>
+      <div style={{flex:1,overflowY:"auto"}} className="civly-scroll">{children}</div>
 
       {/* Resize handle */}
       <div
         onMouseDown={e=>onResizeStart(e,panel.id)}
-        onMouseEnter={e=>{const b=e.currentTarget.querySelector(".rh-bar");if(b){b.style.opacity="1";b.style.height="44px";}}}
-        onMouseLeave={e=>{const b=e.currentTarget.querySelector(".rh-bar");if(b){b.style.opacity="0";b.style.height="24px";}}}
+        onMouseEnter={e=>{const b=e.currentTarget.querySelector(".rh-bar");if(b){b.style.opacity="1";b.style.height="40px";}}}
+        onMouseLeave={e=>{const b=e.currentTarget.querySelector(".rh-bar");if(b){b.style.opacity="0";b.style.height="20px";}}}
         title="Drag to resize"
-        style={{position:"absolute",right:0,top:44,bottom:0,width:10,cursor:locked?"default":"ew-resize",zIndex:10,display:"flex",alignItems:"center",justifyContent:"center"}}
+        style={{position:"absolute",right:0,top:0,bottom:0,width:8,cursor:locked?"default":"ew-resize",zIndex:10,display:"flex",alignItems:"center",justifyContent:"center"}}
       >
-        <div className="rh-bar" style={{width:3,height:24,borderRadius:9999,background:accentCol,opacity:0,transition:"opacity 0.15s,height 0.2s ease"}}/>
+        <div className="rh-bar" style={{width:2,height:20,borderRadius:9999,background:accentCol,opacity:0,transition:"opacity 0.15s,height 0.18s ease"}}/>
       </div>
     </div>
   );
@@ -1677,31 +1663,33 @@ function AddPanelModal({onAdd,onClose}){
       :bills.filter(b=>!search||b.title.toLowerCase().includes(search.toLowerCase())||b.num.toLowerCase().includes(search.toLowerCase()))
     :[];
   return(
-    <div style={{position:"fixed",inset:0,background:"rgba(5,10,22,0.6)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",paddingTop:64}} onClick={onClose}>
-      <div style={{background:"#fff",borderRadius:14,width:520,maxHeight:"74vh",overflow:"hidden",display:"flex",flexDirection:"column",boxShadow:"0 32px 80px rgba(0,0,0,0.3),0 8px 24px rgba(0,0,0,0.15)",border:"1px solid rgba(255,255,255,0.08)"}} onClick={e=>e.stopPropagation()}>
-        {/* Dark header */}
-        <div style={{background:"#0a1628",padding:"14px 18px 13px",flexShrink:0,position:"relative"}}>
-          <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:C.accent}}/>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:2}}>
+    <div style={{position:"fixed",inset:0,background:"rgba(10,18,38,0.5)",backdropFilter:"blur(6px)",WebkitBackdropFilter:"blur(6px)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",paddingTop:64}} onClick={onClose}>
+      <div style={{background:"#fff",borderRadius:14,width:520,maxHeight:"72vh",overflow:"hidden",display:"flex",flexDirection:"column",boxShadow:"0 24px 60px rgba(10,18,38,0.22),0 4px 16px rgba(10,18,38,0.08)",border:"1px solid "+C.border}} onClick={e=>e.stopPropagation()}>
+        {/* Clean header — no dark zone */}
+        <div style={{padding:"18px 20px 14px",borderBottom:"1px solid #f0f2f7",flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between"}}>
             <div>
-              <div style={{fontFamily:F.mono,fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.9)",letterSpacing:1,textTransform:"uppercase"}}>
-                {step==="type"?"Add Panel":"Choose "+(configType==="member"?"Member":"Bill")}
+              <div style={{fontFamily:F.display,fontSize:18,fontWeight:700,color:C.text,letterSpacing:"-0.3px",lineHeight:1.1}}>
+                {step==="type"?"Add a panel":"Choose "+(configType==="member"?"a member":"a bill")}
+              </div>
+              <div style={{fontFamily:F.body,fontSize:11,color:C.textM,marginTop:4}}>
+                {step==="type"?"Select a panel type to add to your dashboard":("Pick the "+(configType==="member"?"member":"bill")+" this panel will track")}
               </div>
               {step==="config"&&(
                 <button onClick={()=>{setStep("type");setSearch("");}}
-                  style={{all:"unset",cursor:"pointer",fontFamily:F.body,fontSize:10,color:"rgba(255,255,255,0.45)",marginTop:2,display:"flex",alignItems:"center",gap:3,transition:"color 0.12s"}}
-                  onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,0.75)"}
-                  onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.45)"}>
+                  style={{all:"unset",cursor:"pointer",fontFamily:F.body,fontSize:11,color:C.accent2,marginTop:6,display:"inline-flex",alignItems:"center",gap:3,transition:"opacity 0.12s"}}
+                  onMouseEnter={e=>e.currentTarget.style.opacity="0.7"}
+                  onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                  Back
+                  Back to panel types
                 </button>
               )}
             </div>
             <button onClick={onClose}
-              style={{all:"unset",cursor:"pointer",width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:7,color:"rgba(255,255,255,0.45)",transition:"all 0.12s"}}
-              onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,0.1)";e.currentTarget.style.color="rgba(255,255,255,0.9)";}}
-              onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color="rgba(255,255,255,0.45)";}}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              style={{all:"unset",cursor:"pointer",width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:7,color:C.textM,border:"1px solid "+C.border,transition:"all 0.12s",flexShrink:0,marginTop:2}}
+              onMouseEnter={e=>{e.currentTarget.style.background=C.bg2;e.currentTarget.style.color=C.text;}}
+              onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=C.textM;}}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
         </div>
@@ -1709,19 +1697,13 @@ function AddPanelModal({onAdd,onClose}){
         {step==="type"&&(
           <div style={{padding:16,display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,overflowY:"auto"}} className="civly-scroll">
             {Object.entries(PANEL_DEFS).map(([type,def])=>{
-              const acc=PANEL_ACCENT[type]||C.navy;
-              const ico=PANEL_ICON[type];
               return(
                 <button key={type} onClick={()=>pickType(type)}
-                  style={{all:"unset",cursor:"pointer",background:"#fff",borderRadius:10,padding:"13px 14px",border:"1px solid "+C.border,transition:"all 0.15s",display:"flex",flexDirection:"column",gap:8,textAlign:"left",position:"relative",overflow:"hidden"}}
-                  onMouseEnter={e=>{e.currentTarget.style.borderColor=acc+"55";e.currentTarget.style.boxShadow="0 4px 16px rgba(15,29,58,0.08)";e.currentTarget.style.transform="translateY(-1px)";}}
-                  onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.boxShadow="none";e.currentTarget.style.transform="none";}}>
-                  <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:acc}}/>
-                  <div style={{width:28,height:28,borderRadius:8,background:acc+"14",border:"1px solid "+acc+"22",display:"flex",alignItems:"center",justifyContent:"center",color:acc,marginTop:2}}>{ico}</div>
-                  <div>
-                    <div style={{fontFamily:F.body,fontSize:12,fontWeight:600,color:C.text,marginBottom:2}}>{def.label}</div>
-                    <div style={{fontFamily:F.body,fontSize:10,color:C.textM,fontWeight:400,lineHeight:1.4}}>{def.desc}</div>
-                  </div>
+                  style={{all:"unset",cursor:"pointer",background:"#fff",borderRadius:10,padding:"14px",border:"1px solid "+C.border,transition:"all 0.15s",display:"flex",flexDirection:"column",gap:6,textAlign:"left"}}
+                  onMouseEnter={e=>{e.currentTarget.style.background=C.bg;e.currentTarget.style.boxShadow="0 4px 14px rgba(15,29,58,0.07)";e.currentTarget.style.transform="translateY(-1px)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.background="#fff";e.currentTarget.style.boxShadow="none";e.currentTarget.style.transform="none";}}>
+                  <div style={{fontFamily:F.display,fontSize:13,fontWeight:600,color:C.text,letterSpacing:"-0.15px"}}>{def.label}</div>
+                  <div style={{fontFamily:F.body,fontSize:10,color:C.textM,fontWeight:400,lineHeight:1.45}}>{def.desc}</div>
                 </button>
               );
             })}
@@ -1730,17 +1712,18 @@ function AddPanelModal({onAdd,onClose}){
         {/* Config search */}
         {step==="config"&&(
           <div style={{display:"flex",flexDirection:"column",flex:1,overflow:"hidden"}}>
-            <div style={{padding:"10px 16px",borderBottom:"1px solid "+C.border,flexShrink:0,background:C.bg}}>
+            <div style={{padding:"10px 16px 10px",borderBottom:"1px solid #f0f2f7",flexShrink:0}}>
               <div style={{position:"relative"}}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.textM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",pointerEvents:"none"}}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.textM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",pointerEvents:"none"}}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input value={search} onChange={e=>setSearch(e.target.value)} placeholder={"Search "+(configType==="member"?"members…":"bills…")} autoFocus
-                  style={{width:"100%",boxSizing:"border-box",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 12px 8px 32px",fontSize:12,fontFamily:F.body,outline:"none",color:C.text}}/>
+                  style={{width:"100%",boxSizing:"border-box",background:C.bg,border:"1px solid "+C.border,borderRadius:8,padding:"9px 12px 9px 34px",fontSize:12,fontFamily:F.body,outline:"none",color:C.text,transition:"border-color 0.15s"}}
+                  onFocus={e=>e.target.style.borderColor=C.accent2} onBlur={e=>e.target.style.borderColor=C.border}/>
               </div>
             </div>
             <div style={{overflowY:"auto",flex:1}} className="civly-scroll">
-              {items.map((item,i)=>(
+              {items.map((item)=>(
                 <button key={item.id} onClick={()=>pickConfig(item)}
-                  style={{all:"unset",cursor:"pointer",display:"flex",alignItems:"center",gap:10,padding:"10px 16px",width:"100%",boxSizing:"border-box",borderBottom:"1px solid "+C.border,transition:"background 0.1s"}}
+                  style={{all:"unset",cursor:"pointer",display:"flex",alignItems:"center",gap:10,padding:"10px 16px",width:"100%",boxSizing:"border-box",borderBottom:"1px solid #f0f2f7",transition:"background 0.1s"}}
                   onMouseEnter={e=>e.currentTarget.style.background=C.bg}
                   onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
                   {configType==="member"
@@ -1749,11 +1732,11 @@ function AddPanelModal({onAdd,onClose}){
                          <div style={{fontFamily:F.display,fontSize:12,fontWeight:600,color:C.text,letterSpacing:"-0.1px"}}>{item.pre} {item.name}</div>
                          <div style={{fontFamily:F.body,fontSize:10,color:C.textM,marginTop:1}}>{item.party} · {item.state} · {item.chamber}</div>
                        </div>
-                       <span style={{fontFamily:F.mono,fontSize:8,fontWeight:700,color:pc(item.party),background:pc(item.party)+"14",padding:"2px 6px",borderRadius:9999,flexShrink:0}}>{pA(item.party)}</span>
+                       <span style={{fontFamily:F.mono,fontSize:8,fontWeight:700,color:pc(item.party),background:pc(item.party)+"14",padding:"2px 7px",borderRadius:9999,flexShrink:0}}>{pA(item.party)}</span>
                      </>
                     :<><div style={{flex:1,minWidth:0}}>
                          <div style={{fontFamily:F.display,fontSize:12,fontWeight:600,color:C.text,letterSpacing:"-0.1px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.title}</div>
-                         <div style={{fontFamily:F.mono,fontSize:9,color:C.textM,marginTop:2}}>{item.num} · {SL[item.status]||item.status}</div>
+                         <div style={{fontFamily:F.mono,fontSize:9,color:C.textM,marginTop:2,letterSpacing:0.2}}>{item.num} · {SL[item.status]||item.status}</div>
                        </div>
                      </>
                   }
@@ -1811,8 +1794,8 @@ function LegProgressChartPanel({nav}){
     <div style={{padding:"14px 16px 10px"}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
         <div>
-          <div style={{fontFamily:F.mono,fontSize:8,fontWeight:700,color:C.textM,letterSpacing:1.2,textTransform:"uppercase",marginBottom:2}}>Bills by Legislative Stage</div>
-          <div style={{fontFamily:F.display,fontSize:11,color:C.text2,fontWeight:400}}>{filtered.length} bills · 119th Congress</div>
+          <div style={{fontFamily:F.display,fontSize:13,fontWeight:600,color:C.text,marginBottom:2}}>Bills by Stage</div>
+          <div style={{fontFamily:F.body,fontSize:11,color:C.textM}}>{filtered.length} bills · 119th Congress</div>
         </div>
         <FilterBtn options={[{key:"all",label:"All"},{key:"house",label:"House"},{key:"senate",label:"Senate"}]} value={filter} onChange={setFilter}/>
       </div>
@@ -1886,8 +1869,8 @@ function LegStatsChartPanel(){
   return(
     <div style={{padding:"14px 16px 10px"}}>
       <div style={{marginBottom:12}}>
-        <div style={{fontFamily:F.mono,fontSize:8,fontWeight:700,color:C.textM,letterSpacing:1.2,textTransform:"uppercase",marginBottom:2}}>8-Week Activity Trend</div>
-        <div style={{fontFamily:F.display,fontSize:11,color:C.text2,fontWeight:400}}>Bills in progress by stage</div>
+        <div style={{fontFamily:F.display,fontSize:13,fontWeight:600,color:C.text,marginBottom:2}}>8-Week Activity Trend</div>
+        <div style={{fontFamily:F.body,fontSize:11,color:C.textM}}>Bills in progress by stage</div>
       </div>
       <svg width="100%" viewBox={`0 0 ${svgW} ${svgH}`} style={{overflow:"visible",display:"block"}}
         onMouseLeave={()=>setHovW(null)}>
@@ -1966,8 +1949,8 @@ function VotingDistChartPanel({nav}){
   return(
     <div style={{padding:"14px 16px 10px"}}>
       <div style={{marginBottom:12}}>
-        <div style={{fontFamily:F.mono,fontSize:8,fontWeight:700,color:C.textM,letterSpacing:1.2,textTransform:"uppercase",marginBottom:2}}>House Vote Results</div>
-        <div style={{fontFamily:F.display,fontSize:11,color:C.text2,fontWeight:400}}>{withVotes.length} bills with recorded votes</div>
+        <div style={{fontFamily:F.display,fontSize:13,fontWeight:600,color:C.text,marginBottom:2}}>House Vote Results</div>
+        <div style={{fontFamily:F.body,fontSize:11,color:C.textM}}>{withVotes.length} bills with recorded votes</div>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:16}}>
         <svg width="120" height="120" viewBox="0 0 120 120" style={{flexShrink:0}}>
@@ -2063,58 +2046,28 @@ function DashboardStatsBar({wb,wm,nav}){
   }).length;
   const signed=bills.filter(b=>b.status==="signed_into_law").length;
   const stats=[
-    {label:"Active Floor",value:activeFloor,sub:"Bills on floor now",spark:[1,1,2,1,2,2,3,activeFloor],delta:"+1 this week",up:true,col:"#c41e3a",bg:"#fff1f2",dest:"bills",live:true,
-      icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>},
-    {label:"In Committee",value:inCommittee,sub:"Under review",spark:[3,4,4,5,5,6,5,inCommittee],delta:"No change",up:null,col:"#b45309",bg:"#fffbeb",dest:"bills",
-      icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>},
-    {label:"Enacted",value:signed,sub:"Signed into law",spark:[0,0,1,1,2,3,3,signed],delta:"+"+signed+" total",up:true,col:"#15803d",bg:"#f0fdf4",dest:"bills",
-      icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>},
-    {label:"Watching",value:(wb?.length||0)+(wm?.length||0),sub:`${wb?.length||0} bills · ${wm?.length||0} members`,spark:[0,1,1,1,2,2,3,(wb?.length||0)+(wm?.length||0)],delta:"My watchlist",up:null,col:"#7c3aed",bg:"#faf5ff",dest:"saved",
-      icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>},
+    {label:"Active Floor",value:activeFloor,sub:"Bills on floor now",delta:"+1 this week",up:true,dest:"bills",live:true},
+    {label:"In Committee",value:inCommittee,sub:"Under review",delta:null,up:null,dest:"bills"},
+    {label:"Enacted",value:signed,sub:"Signed into law",delta:"+"+signed+" total",up:true,dest:"bills"},
+    {label:"Watching",value:(wb?.length||0)+(wm?.length||0),sub:`${wb?.length||0} bills · ${wm?.length||0} members`,delta:(wb?.length||0)+(wm?.length||0)>0?"+"+((wb?.length||0)+(wm?.length||0)):null,up:null,dest:"saved"},
   ];
   return(
     <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
       {stats.map(s=>(
         <div key={s.label} onClick={()=>nav(s.dest)}
-          style={{background:"#fff",borderRadius:18,padding:"16px 18px 52px",border:"1.5px solid "+C.border,cursor:"pointer",transition:"all 0.22s cubic-bezier(0.22,1,0.36,1)",boxShadow:C.cardShadow,position:"relative",overflow:"hidden"}}
-          onMouseEnter={e=>{e.currentTarget.style.borderColor=s.col+"50";e.currentTarget.style.boxShadow="0 8px 28px rgba(15,29,58,0.08),0 0 0 1px "+s.col+"20";e.currentTarget.style.transform="translateY(-2px)";}}
-          onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.boxShadow=C.cardShadow;e.currentTarget.style.transform="none";}}>
-          {/* Sparkline — full-width bottom wash */}
-          <div style={{position:"absolute",bottom:0,left:0,right:0,height:48,opacity:0.55,pointerEvents:"none"}}>
-            <svg width="100%" height="48" viewBox="0 0 200 48" preserveAspectRatio="none" style={{display:"block"}}>
-              <defs>
-                <linearGradient id={"sg-"+s.label.replace(/\s/g,"")} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={s.col} stopOpacity="0.18"/>
-                  <stop offset="100%" stopColor={s.col} stopOpacity="0"/>
-                </linearGradient>
-              </defs>
-              {(()=>{
-                const d=s.spark;const pad=4;const h=48;const w=200;
-                const max=Math.max(...d,1);const mn=Math.min(...d);const range=max-mn||1;
-                const pts=d.map((v,i)=>({x:(i/(d.length-1))*(w-pad*2)+pad,y:h-pad-((v-mn)/range)*(h-pad*2)}));
-                const line=pts.map((p,i)=>{
-                  if(i===0)return`M${p.x},${p.y}`;
-                  const pv=pts[i-1];
-                  return`C${pv.x+(p.x-pv.x)*0.45},${pv.y} ${pv.x+(p.x-pv.x)*0.55},${p.y} ${p.x},${p.y}`;
-                }).join(" ");
-                const area=`${line} L${pts[pts.length-1].x},${h} L${pts[0].x},${h} Z`;
-                return(<><path d={area} fill={`url(#${"sg-"+s.label.replace(/\s/g,"")})`}/><path d={line} fill="none" stroke={s.col} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><circle cx={pts[pts.length-1].x} cy={pts[pts.length-1].y} r="2" fill={s.col}/></>);
-              })()}
-            </svg>
-          </div>
-          {/* Icon + label */}
-          <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:10}}>
-            <div style={{width:26,height:26,borderRadius:8,background:s.bg,display:"flex",alignItems:"center",justifyContent:"center",color:s.col,flexShrink:0,position:"relative"}}>
-              {s.icon}
-              {s.live&&<span style={{position:"absolute",top:-2,right:-2,width:7,height:7,borderRadius:"50%",background:"#c41e3a",border:"1.5px solid #fff",animation:"civlyDotBounce 1.6s ease-in-out infinite"}}/>}
-            </div>
-            <span style={{fontFamily:F.mono,fontSize:9,fontWeight:700,color:C.textM,letterSpacing:0.8,textTransform:"uppercase"}}>{s.label}</span>
-          </div>
+          style={{background:"#fff",borderRadius:14,padding:"18px 18px 20px",border:"1px solid "+C.border,cursor:"pointer",transition:"transform 0.18s,box-shadow 0.18s",boxShadow:C.cardShadow,position:"relative"}}
+          onMouseEnter={e=>{e.currentTarget.style.boxShadow="0 8px 28px rgba(15,29,58,0.09)";e.currentTarget.style.transform="translateY(-2px)";}}
+          onMouseLeave={e=>{e.currentTarget.style.boxShadow=C.cardShadow;e.currentTarget.style.transform="none";}}>
+          {/* Live dot */}
+          {s.live&&<span style={{position:"absolute",top:14,right:14,width:6,height:6,borderRadius:"50%",background:"#c41e3a",animation:"civlyDotBounce 1.6s ease-in-out infinite"}}/>}
           {/* Big number */}
-          <div style={{fontFamily:F.display,fontSize:32,fontWeight:800,color:C.text,lineHeight:1,letterSpacing:"-1px",marginBottom:4}}>{s.value}</div>
-          {/* Sub only — no delta badge overlapping sparkline */}
-          <div style={{marginTop:2}}>
-            <span style={{fontFamily:F.body,fontSize:10,color:C.textM,fontWeight:400}}>{s.sub}</span>
+          <div style={{fontFamily:F.display,fontSize:30,fontWeight:700,color:C.text,lineHeight:1,letterSpacing:"-0.5px",marginBottom:6}}>{s.value}</div>
+          {/* Label */}
+          <div style={{fontFamily:F.display,fontSize:12,fontWeight:600,color:C.text2,marginBottom:4}}>{s.label}</div>
+          {/* Sub + delta */}
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
+            <span style={{fontFamily:F.body,fontSize:10,color:C.textM}}>{s.sub}</span>
+            {s.delta&&<span style={{fontFamily:F.mono,fontSize:9,fontWeight:700,color:s.up?"#15803d":C.textM}}>{s.delta}</span>}
           </div>
         </div>
       ))}
@@ -2124,46 +2077,39 @@ function DashboardStatsBar({wb,wm,nav}){
 
 // ─── BILL PIPELINE (Kanban) ────────────────────────────────
 const PIPE_COLS=[
-  {key:"in_committee",label:"Committee",col:"#b45309",bg:"#fffbeb",border:"#fde68a"},
-  {key:"on_the_floor",label:"On Floor",col:"#0369a1",bg:"#eff6ff",border:"#bfdbfe",live:true},
-  {key:"passed_house",label:"Passed House",col:"#1e40af",bg:"#eef2ff",border:"#c7d2fe"},
-  {key:"passed_senate",label:"Passed Senate",col:"#4f46e5",bg:"#f5f3ff",border:"#ddd6fe"},
-  {key:"signed_into_law",label:"Enacted",col:"#15803d",bg:"#f0fdf4",border:"#bbf7d0"},
+  {key:"in_committee",label:"Committee",live:false},
+  {key:"on_the_floor",label:"On Floor",live:true},
+  {key:"passed_house",label:"Passed House",live:false},
+  {key:"passed_senate",label:"Passed Senate",live:false},
+  {key:"signed_into_law",label:"Enacted",live:false},
 ];
 function BillPipelinePanel({nav,wb,toggleB}){
   const[hovBill,setHovBill]=useState(null);
   const colBills=PIPE_COLS.map(col=>({...col,bills:bills.filter(b=>b.status===col.key)}));
   return(
-    <div style={{padding:"14px 0 10px"}}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 16px",marginBottom:14}}>
-        <div>
-          <div style={{fontFamily:F.mono,fontSize:8,fontWeight:600,color:C.textM,letterSpacing:1.4,textTransform:"uppercase",marginBottom:3}}>Legislative Pipeline</div>
-          <div style={{fontFamily:F.display,fontSize:13,fontWeight:600,color:C.text,letterSpacing:"-0.2px"}}>{bills.filter(b=>!["signed_into_law","failed","vetoed"].includes(b.status)).length} bills in progress</div>
-        </div>
-        <button onClick={()=>nav("bills")} style={{all:"unset",cursor:"pointer",fontFamily:F.body,fontSize:12,color:C.text2,fontWeight:500,display:"flex",alignItems:"center",gap:3,padding:"5px 10px",borderRadius:7,border:"1px solid "+C.border,background:"#fff",transition:"all 0.15s"}}
-          onMouseEnter={e=>{e.currentTarget.style.background=C.bg;e.currentTarget.style.color=C.text;}}
-          onMouseLeave={e=>{e.currentTarget.style.background="#fff";e.currentTarget.style.color=C.text2;}}>
-          View all <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    <div style={{padding:"16px 0 12px"}}>
+      <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",padding:"0 18px",marginBottom:16}}>
+        <span style={{fontFamily:F.display,fontSize:15,fontWeight:600,color:C.text,letterSpacing:"-0.2px"}}>
+          {bills.filter(b=>!["signed_into_law","failed","vetoed"].includes(b.status)).length} bills in progress
+        </span>
+        <button onClick={()=>nav("bills")} style={{all:"unset",cursor:"pointer",fontFamily:F.body,fontSize:12,color:C.textM,display:"flex",alignItems:"center",gap:2,transition:"color 0.12s"}}
+          onMouseEnter={e=>e.currentTarget.style.color=C.text} onMouseLeave={e=>e.currentTarget.style.color=C.textM}>
+          View all <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
-      <div style={{display:"flex",gap:0,overflowX:"auto",paddingBottom:6}} className="civly-scroll">
+      <div style={{display:"flex",gap:0,overflowX:"auto",paddingBottom:8}} className="civly-scroll">
         {colBills.map((col,ci)=>(
-          <div key={col.key} style={{minWidth:196,flex:"0 0 196px",margin:ci===0?"0 0 0 16px":"0",marginRight:ci===colBills.length-1?"16px":"10px"}}>
-            {/* Column header */}
-            <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:10,padding:"8px 12px",borderRadius:10,background:"#fff",border:"1px solid "+C.border,boxShadow:"0 1px 3px rgba(15,29,58,0.04)"}}>
-              {col.live
-                ?<span style={{width:7,height:7,borderRadius:"50%",background:"#22c55e",flexShrink:0,boxShadow:"0 0 0 2px rgba(34,197,94,0.25)",animation:"civlyDotBounce 1.6s ease-in-out infinite"}}/>
-                :<span style={{width:7,height:7,borderRadius:"50%",background:C.border,flexShrink:0}}/>}
-              <span style={{fontFamily:F.mono,fontSize:8,fontWeight:700,color:C.text,letterSpacing:0.8,textTransform:"uppercase",flex:1}}>{col.label}</span>
-              <span style={{fontFamily:F.mono,fontSize:9,fontWeight:700,color:C.text2,background:C.bg2,width:20,height:20,borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",border:"1px solid "+C.border}}>{col.bills.length}</span>
+          <div key={col.key} style={{minWidth:188,flex:"0 0 188px",paddingLeft:ci===0?18:0,paddingRight:ci===colBills.length-1?18:12}}>
+            {/* Column label */}
+            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:10}}>
+              {col.live&&<span style={{width:6,height:6,borderRadius:"50%",background:"#22c55e",flexShrink:0,animation:"civlyDotBounce 1.6s ease-in-out infinite"}}/>}
+              <span style={{fontFamily:F.body,fontSize:11,fontWeight:500,color:C.text2}}>{col.label}</span>
+              <span style={{fontFamily:F.mono,fontSize:10,color:C.textM,marginLeft:"auto"}}>{col.bills.length}</span>
             </div>
-            {/* Bill cards */}
-            <div style={{display:"flex",flexDirection:"column",gap:7}}>
+            {/* Cards */}
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
               {col.bills.length===0&&(
-                <div style={{padding:"20px 12px",textAlign:"center",fontFamily:F.body,fontSize:11,color:C.textM,background:"rgba(248,250,252,0.6)",borderRadius:10,border:"1.5px dashed "+C.border}}>
-                  <div style={{marginBottom:4,fontSize:16,opacity:0.3}}>—</div>
-                  None
-                </div>
+                <div style={{padding:"24px 0",textAlign:"center",fontFamily:F.body,fontSize:11,color:C.textM,borderRadius:10,background:C.bg,border:"1px dashed "+C.border}}>—</div>
               )}
               {col.bills.map(bill=>{
                 const sp=getSp(bill);
@@ -2174,23 +2120,20 @@ function BillPipelinePanel({nav,wb,toggleB}){
                     onClick={()=>nav("billDetail",bill.id)}
                     onMouseEnter={()=>setHovBill(bill.id)}
                     onMouseLeave={()=>setHovBill(null)}
-                    style={{background:"#fff",borderRadius:10,padding:"11px 12px",border:"1px solid "+(isHov?"rgba(15,29,58,0.14)":C.border),cursor:"pointer",transition:"all 0.18s cubic-bezier(0.22,1,0.36,1)",boxShadow:isHov?"0 6px 20px rgba(15,29,58,0.09),0 2px 6px rgba(15,29,58,0.04)":"0 1px 3px rgba(15,29,58,0.04)",transform:isHov?"translateY(-2px)":"none"}}>
-                    {/* Top row: bill number + bookmark */}
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:4,marginBottom:8}}>
-                      <span style={{fontFamily:F.mono,fontSize:9,color:C.text2,fontWeight:600,background:C.bg,padding:"2px 7px",borderRadius:5,border:"1px solid "+C.border,flexShrink:0,letterSpacing:0.3}}>{bill.num}</span>
+                    style={{background:"#fff",borderRadius:10,padding:"12px",border:"1px solid "+(isHov?C.border:C.border),cursor:"pointer",transition:"box-shadow 0.18s ease,transform 0.18s ease",boxShadow:isHov?"0 8px 24px rgba(15,29,58,0.1)":"0 1px 3px rgba(15,29,58,0.05)",transform:isHov?"translateY(-2px)":"none"}}>
+                    <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:6}}>
+                      <span style={{fontFamily:F.mono,fontSize:9,color:C.textM,letterSpacing:0.2}}>{bill.num}</span>
                       <button onClick={e=>{e.stopPropagation();toggleB&&toggleB(bill.id);}}
-                        style={{all:"unset",cursor:"pointer",color:isW?C.navy:C.textM,flexShrink:0,opacity:isW?1:0.5,transition:"opacity 0.15s"}}
-                        onMouseEnter={e=>e.currentTarget.style.opacity="1"} onMouseLeave={e=>e.currentTarget.style.opacity=isW?"1":"0.5"}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill={isW?"currentColor":"none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+                        style={{all:"unset",cursor:"pointer",color:isW?C.text:C.textM,opacity:isW?0.8:0.3,transition:"opacity 0.15s",marginTop:-1}}
+                        onMouseEnter={e=>e.currentTarget.style.opacity="0.8"} onMouseLeave={e=>e.currentTarget.style.opacity=isW?"0.8":"0.3"}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill={isW?"currentColor":"none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
                       </button>
                     </div>
-                    {/* Title */}
-                    <div style={{fontFamily:F.display,fontSize:12,fontWeight:600,color:C.text,lineHeight:1.4,letterSpacing:"-0.15px",marginBottom:10}}>{bill.title}</div>
-                    {/* Sponsor row */}
-                    {sp&&<div style={{display:"flex",alignItems:"center",gap:5,paddingTop:8,borderTop:"1px solid "+C.border}}>
-                      <Avatar bio={sp.bio} name={sp.name} size={18}/>
-                      <span style={{fontFamily:F.body,fontSize:10,color:C.text2,fontWeight:400,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sp.name.split(" ").pop()}</span>
-                      <span style={{fontFamily:F.mono,fontSize:8,fontWeight:700,color:pc(sp.party),background:pc(sp.party)+"14",padding:"2px 6px",borderRadius:9999,flexShrink:0,letterSpacing:0.3}}>{pA(sp.party)}</span>
+                    <div style={{fontFamily:F.display,fontSize:12,fontWeight:600,color:C.text,lineHeight:1.45,letterSpacing:"-0.1px",marginBottom:10}}>{bill.title}</div>
+                    {sp&&<div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <Avatar bio={sp.bio} name={sp.name} size={16}/>
+                      <span style={{fontFamily:F.body,fontSize:10,color:C.textM,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sp.name.split(" ").pop()}</span>
+                      <PD party={sp.party} size={5}/>
                     </div>}
                   </div>
                 );
@@ -2206,39 +2149,24 @@ function BillPipelinePanel({nav,wb,toggleB}){
 // ─── ACTIVITY FEED ─────────────────────────────────────────
 function ActivityFeedPanel({nav}){
   const events=[
-    ...billUpdates.map(u=>({id:u.id,type:"bill",date:u.date,title:u.title,desc:u.desc,billId:u.billId,col:"#1e40af"})),
-    ...calendarEvents.slice(0,4).map(e=>({id:"ev-"+e.id,type:e.type,date:e.date,title:e.title,desc:e.desc,billId:e.billId,
-      col:e.type==="vote"?"#15803d":e.type==="deadline"?"#c41e3a":e.type==="markup"?"#1e40af":"#7c3aed"})),
+    ...billUpdates.map(u=>({id:u.id,type:"bill",date:u.date,title:u.title,desc:u.desc,billId:u.billId})),
+    ...calendarEvents.slice(0,4).map(e=>({id:"ev-"+e.id,type:e.type,date:e.date,title:e.title,desc:e.desc,billId:e.billId})),
   ].sort((a,b)=>new Date(b.date+"T12:00:00")-new Date(a.date+"T12:00:00")).slice(0,8);
-  const typeLabel=t=>t==="bill"?"Bill":t==="vote"?"Vote":t==="deadline"?"Deadline":"Event";
-  const typeIcon=t=>{
-    if(t==="bill")return<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>;
-    if(t==="vote")return<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
-    if(t==="deadline")return<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
-    return<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
-  };
   return(
-    <div style={{padding:"2px 0"}}>
+    <div>
       {events.map((e,i)=>(
         <div key={e.id} onClick={()=>e.billId&&nav("billDetail",e.billId)}
-          style={{display:"flex",gap:12,padding:"10px 16px",borderBottom:i<events.length-1?"1px solid rgba(221,226,237,0.5)":"none",cursor:e.billId?"pointer":"default",transition:"background 0.12s"}}
-          onMouseEnter={ev=>{if(e.billId)ev.currentTarget.style.background="rgba(15,29,58,0.025)";}}
+          style={{display:"flex",gap:14,padding:"13px 18px",borderBottom:i<events.length-1?"1px solid "+C.border:"none",cursor:e.billId?"pointer":"default",transition:"background 0.12s"}}
+          onMouseEnter={ev=>{if(e.billId)ev.currentTarget.style.background=C.bg;}}
           onMouseLeave={ev=>ev.currentTarget.style.background="transparent"}>
-          {/* Icon + connector */}
-          <div style={{display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0}}>
-            <div style={{width:28,height:28,borderRadius:8,background:C.bg2,border:"1px solid "+C.border,display:"flex",alignItems:"center",justifyContent:"center",color:C.text2,flexShrink:0}}>
-              {typeIcon(e.type)}
-            </div>
-            {i<events.length-1&&<div style={{width:1,flex:1,background:C.border,marginTop:5,minHeight:6,opacity:0.5}}/>}
+          {/* Date column */}
+          <div style={{width:32,flexShrink:0,paddingTop:2}}>
+            <div style={{fontFamily:F.mono,fontSize:9,color:C.textM,lineHeight:1.3}}>{e.date.slice(5).replace("-","/")}</div>
           </div>
           {/* Content */}
-          <div style={{flex:1,minWidth:0,paddingTop:4}}>
-            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
-              <span style={{fontFamily:F.mono,fontSize:8,fontWeight:600,color:C.textM,background:C.bg2,padding:"1px 6px",borderRadius:4,border:"1px solid "+C.border,textTransform:"uppercase",letterSpacing:0.5,flexShrink:0}}>{typeLabel(e.type)}</span>
-              <span style={{fontFamily:F.mono,fontSize:9,color:C.textM,marginLeft:"auto",flexShrink:0}}>{e.date}</span>
-            </div>
-            <div style={{fontFamily:F.display,fontSize:12,fontWeight:600,color:C.text,letterSpacing:"-0.1px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:2}}>{e.title}</div>
-            <div style={{fontFamily:F.body,fontSize:10,color:C.text2,fontWeight:400,lineHeight:1.45,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.desc}</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontFamily:F.display,fontSize:13,fontWeight:600,color:C.text,letterSpacing:"-0.15px",lineHeight:1.35,marginBottom:3}}>{e.title}</div>
+            <div style={{fontFamily:F.body,fontSize:11,color:C.textM,lineHeight:1.5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.desc}</div>
           </div>
         </div>
       ))}
@@ -2254,41 +2182,30 @@ function MemberLeaderboardPanel({nav}){
     const score=sponsored*3+cosponsored;
     return{...m,sponsored,cosponsored,score};
   }).sort((a,b)=>b.score-a.score).slice(0,8);
-  const MEDALS=["🥇","🥈","🥉"];
+  const maxScore=scored[0]?.score||1;
   return(
-    <div style={{padding:"2px 0"}}>
-      {scored.map((m,i)=>{
-        const partyCol=pc(m.party);
-        const maxScore=scored[0].score||1;
-        return(
-          <div key={m.id} onClick={()=>nav("memberProfile",m.id)}
-            style={{display:"flex",alignItems:"center",gap:10,padding:"9px 16px",borderBottom:i<scored.length-1?"1px solid rgba(221,226,237,0.5)":"none",cursor:"pointer",transition:"background 0.12s"}}
-            onMouseEnter={e=>e.currentTarget.style.background="rgba(15,29,58,0.025)"}
-            onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-            {/* Rank */}
-            <div style={{width:22,flexShrink:0,textAlign:"center"}}>
-              {i<3
-                ?<span style={{fontSize:14}}>{MEDALS[i]}</span>
-                :<span style={{fontFamily:F.mono,fontSize:10,fontWeight:600,color:C.textM}}>{i+1}</span>}
-            </div>
-            <Avatar bio={m.bio} name={m.name} size={32}/>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
-                <span style={{fontFamily:F.display,fontSize:12,fontWeight:600,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",letterSpacing:"-0.1px"}}>{m.name}</span>
-                <span style={{fontFamily:F.mono,fontSize:8,fontWeight:700,color:partyCol,background:partyCol+"14",padding:"1.5px 5px",borderRadius:9999,flexShrink:0,border:"1px solid "+partyCol+"25"}}>{pA(m.party)}</span>
-              </div>
-              {/* Activity bar */}
-              <div style={{height:3,background:C.bg2,borderRadius:9999,overflow:"hidden"}}>
-                <div style={{height:"100%",background:C.navy,borderRadius:9999,width:(m.score/maxScore*100)+"%",transition:"width 0.5s cubic-bezier(0.22,1,0.36,1)",opacity:0.25+0.75*(m.score/maxScore)}}/>
-              </div>
-            </div>
-            <div style={{textAlign:"right",flexShrink:0}}>
-              <div style={{fontFamily:F.mono,fontSize:11,fontWeight:700,color:C.text}}>{m.score}</div>
-              <div style={{fontFamily:F.mono,fontSize:8,color:C.textM,marginTop:1}}>{m.sponsored}s · {m.cosponsored}c</div>
+    <div>
+      {scored.map((m,i)=>(
+        <div key={m.id} onClick={()=>nav("memberProfile",m.id)}
+          style={{display:"flex",alignItems:"center",gap:12,padding:"11px 18px",borderBottom:i<scored.length-1?"1px solid "+C.border:"none",cursor:"pointer",transition:"background 0.12s"}}
+          onMouseEnter={e=>e.currentTarget.style.background=C.bg}
+          onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+          {/* Rank number */}
+          <div style={{width:16,flexShrink:0,fontFamily:F.mono,fontSize:10,color:C.textM,textAlign:"right"}}>{i+1}</div>
+          <Avatar bio={m.bio} name={m.name} size={30}/>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontFamily:F.display,fontSize:13,fontWeight:600,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",letterSpacing:"-0.15px",marginBottom:5}}>{m.name}</div>
+            {/* Thin progress bar */}
+            <div style={{height:2,background:C.border,borderRadius:9999,overflow:"hidden"}}>
+              <div style={{height:"100%",background:C.text,borderRadius:9999,width:(m.score/maxScore*100)+"%",opacity:0.15+0.45*(m.score/maxScore),transition:"width 0.5s ease"}}/>
             </div>
           </div>
-        );
-      })}
+          <div style={{textAlign:"right",flexShrink:0,minWidth:28}}>
+            <div style={{fontFamily:F.display,fontSize:14,fontWeight:700,color:C.text,lineHeight:1}}>{m.score}</div>
+            <div style={{fontFamily:F.body,fontSize:10,color:C.textM,marginTop:1}}>{m.sponsored}+{m.cosponsored}</div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -2318,45 +2235,30 @@ function PartyLineVotesPanel({nav}){
   }).sort((a,b)=>Math.abs(a.rPct-a.dPct)-Math.abs(b.rPct-b.dPct));
 
   return(
-    <div style={{padding:"4px 0"}}>
-      {rows.map((b,i)=>{
-        const isHov=hover===b.id;
-        const polarization=Math.abs(b.rPct-b.dPct);
-        const splitLabel=polarization>60?"High":polarization>30?"Mid":"Low";
-        return(
-          <div key={b.id} onClick={()=>nav("billDetail",b.id)}
-            onMouseEnter={()=>setHover(b.id)} onMouseLeave={()=>setHover(null)}
-            style={{padding:"10px 16px",borderBottom:i<rows.length-1?"1px solid rgba(221,226,237,0.5)":"none",cursor:"pointer",background:isHov?"rgba(15,29,58,0.025)":"transparent",transition:"background 0.12s"}}>
-            {/* Bill row */}
-            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:8,marginBottom:8}}>
-              <div style={{flex:1,minWidth:0}}>
-                <span style={{fontFamily:F.mono,fontSize:9,color:C.textM,display:"block",marginBottom:2}}>{b.num}</span>
-                <span style={{fontFamily:F.display,fontSize:12,fontWeight:600,color:C.text,letterSpacing:"-0.1px",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{b.title}</span>
-              </div>
-              <span style={{fontFamily:F.mono,fontSize:8,fontWeight:700,color:C.text2,background:C.bg2,padding:"2px 7px",borderRadius:5,border:"1px solid "+C.border,flexShrink:0,letterSpacing:0.3,whiteSpace:"nowrap"}}>{polarization}% {splitLabel}</span>
-            </div>
-            {/* Dual bars */}
-            <div style={{display:"flex",flexDirection:"column",gap:4}}>
-              {[{label:"R",pct:b.rPct,col:PC.republican},{label:"D",pct:b.dPct,col:PC.democrat}].map(({label,pct,col})=>(
-                <div key={label} style={{display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontFamily:F.mono,fontSize:9,fontWeight:700,color:col,width:10,flexShrink:0}}>{label}</span>
-                  <div style={{flex:1,height:5,borderRadius:9999,background:C.bg2,overflow:"hidden",border:"1px solid "+C.border}}>
-                    <div style={{height:"100%",borderRadius:9999,background:col,width:pct+"%",transition:"width 0.5s cubic-bezier(0.22,1,0.36,1)",opacity:0.75}}/>
-                  </div>
-                  <span style={{fontFamily:F.mono,fontSize:9,fontWeight:600,color:C.text2,width:30,textAlign:"right",flexShrink:0}}>{pct}%</span>
+    <div>
+      {rows.map((b,i)=>(
+        <div key={b.id} onClick={()=>nav("billDetail",b.id)}
+          onMouseEnter={()=>setHover(b.id)} onMouseLeave={()=>setHover(null)}
+          style={{padding:"13px 18px",borderBottom:i<rows.length-1?"1px solid "+C.border:"none",cursor:"pointer",background:hover===b.id?C.bg:"transparent",transition:"background 0.12s"}}>
+          <div style={{fontFamily:F.display,fontSize:13,fontWeight:600,color:C.text,letterSpacing:"-0.15px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:10}}>{b.title}</div>
+          {/* Stacked bars — no labels, just the two bars side by side */}
+          <div style={{display:"flex",flexDirection:"column",gap:5}}>
+            {[{pct:b.rPct,col:PC.republican},{pct:b.dPct,col:PC.democrat}].map(({pct,col},ri)=>(
+              <div key={ri} style={{display:"flex",alignItems:"center",gap:8}}>
+                <div style={{flex:1,height:4,borderRadius:9999,background:C.border,overflow:"hidden"}}>
+                  <div style={{height:"100%",borderRadius:9999,background:col,opacity:0.65,width:pct+"%",transition:"width 0.5s ease"}}/>
                 </div>
-              ))}
-            </div>
-            {/* Crossover */}
-            {(b.rBreak>0||b.dBreak>0)&&(
-              <div style={{display:"flex",gap:6,marginTop:6}}>
-                {b.rBreak>0&&<span style={{fontFamily:F.mono,fontSize:8,color:C.text2,background:C.bg2,padding:"1.5px 6px",borderRadius:4,border:"1px solid "+C.border}}>{b.rBreak}R crossed</span>}
-                {b.dBreak>0&&<span style={{fontFamily:F.mono,fontSize:8,color:C.text2,background:C.bg2,padding:"1.5px 6px",borderRadius:4,border:"1px solid "+C.border}}>{b.dBreak}D crossed</span>}
+                <span style={{fontFamily:F.mono,fontSize:10,color:C.textM,width:28,textAlign:"right",flexShrink:0}}>{pct}%</span>
               </div>
-            )}
+            ))}
           </div>
-        );
-      })}
+          {(b.rBreak>0||b.dBreak>0)&&(
+            <div style={{marginTop:7,fontFamily:F.body,fontSize:10,color:C.textM}}>
+              {[b.rBreak>0&&`${b.rBreak}R`,b.dBreak>0&&`${b.dBreak}D`].filter(Boolean).join(" + ")} crossed party line
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -2393,29 +2295,27 @@ function VoteScorecardPanel({nav,wb}){
   );
 
   return(
-    <div style={{padding:"0 0 4px"}}>
+    <div style={{padding:"0 0 8px"}}>
       {/* Chamber toggle */}
-      <div style={{display:"flex",alignItems:"center",gap:3,padding:"10px 16px 12px"}}>
-        <div style={{display:"flex",background:C.bg2,borderRadius:8,padding:2,border:"1px solid "+C.border,gap:1}}>
-          {["House","Senate"].map(ch=>(
-            <button key={ch} onClick={()=>setSelChamber(ch)}
-              style={{all:"unset",cursor:"pointer",fontFamily:F.mono,fontSize:9,fontWeight:600,letterSpacing:0.6,textTransform:"uppercase",padding:"4px 12px",borderRadius:6,
-                background:selChamber===ch?"#fff":  "transparent",color:selChamber===ch?C.text:C.textM,
-                boxShadow:selChamber===ch?"0 1px 3px rgba(15,29,58,0.08)":"none",transition:"all 0.15s"}}>
-              {ch}
-            </button>
-          ))}
-        </div>
-        <span style={{fontFamily:F.mono,fontSize:8,color:C.textM,marginLeft:6,letterSpacing:0.4}}>recent votes</span>
+      <div style={{display:"flex",gap:16,padding:"10px 16px 10px"}}>
+        {["House","Senate"].map(ch=>(
+          <button key={ch} onClick={()=>setSelChamber(ch)}
+            style={{all:"unset",cursor:"pointer",fontFamily:F.display,fontSize:12,fontWeight:600,
+              color:selChamber===ch?C.text:C.textM,
+              borderBottom:selChamber===ch?"2px solid "+C.navy:"2px solid transparent",
+              paddingBottom:2,transition:"all 0.12s"}}>
+            {ch}
+          </button>
+        ))}
       </div>
       {/* Table */}
       <div style={{overflowX:"auto"}} className="civly-scroll">
         <table style={{borderCollapse:"collapse",width:"100%",minWidth:360}}>
           <thead>
-            <tr style={{background:C.bg}}>
-              <th style={{padding:"6px 16px",textAlign:"left",fontFamily:F.mono,fontSize:8,fontWeight:700,color:C.textM,letterSpacing:1,textTransform:"uppercase",whiteSpace:"nowrap",borderBottom:"1px solid "+C.border,borderTop:"1px solid "+C.border}}>Member</th>
+            <tr>
+              <th style={{padding:"5px 16px",textAlign:"left",fontFamily:F.body,fontSize:10,fontWeight:500,color:C.textM,borderBottom:"1px solid "+C.border}}>Member</th>
               {votedBills.map(b=>(
-                <th key={b.id} style={{padding:"6px 8px",textAlign:"center",fontFamily:F.mono,fontSize:8,fontWeight:600,color:C.textM,letterSpacing:0.3,borderBottom:"1px solid "+C.border,borderTop:"1px solid "+C.border,maxWidth:52,whiteSpace:"nowrap"}}>
+                <th key={b.id} style={{padding:"5px 8px",textAlign:"center",fontFamily:F.body,fontSize:10,fontWeight:500,color:C.textM,borderBottom:"1px solid "+C.border,maxWidth:52,whiteSpace:"nowrap"}}>
                   <span title={b.title}>{b.num.replace("H.R.","HR").replace("S.","S")}</span>
                 </th>
               ))}
@@ -2423,14 +2323,13 @@ function VoteScorecardPanel({nav,wb}){
           </thead>
           <tbody>
             {displayMembers.map((m,mi)=>{
-              const partyCol=pc(m.party);
               return(
                 <tr key={m.id} onClick={()=>nav("memberProfile",m.id)} style={{cursor:"pointer",transition:"background 0.12s"}}
                   onMouseEnter={e=>e.currentTarget.style.background="rgba(15,29,58,0.025)"}
                   onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-                  <td style={{padding:"7px 16px",borderBottom:"1px solid rgba(221,226,237,0.5)"}}>
-                    <div style={{display:"flex",alignItems:"center",gap:6}}>
-                      <span style={{fontFamily:F.mono,fontSize:8,fontWeight:700,color:partyCol,background:partyCol+"14",padding:"1.5px 5px",borderRadius:9999,flexShrink:0,border:"1px solid "+partyCol+"25"}}>{pA(m.party)}</span>
+                  <td style={{padding:"7px 16px",borderBottom:"1px solid rgba(221,226,237,0.4)"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:7}}>
+                      <PD party={m.party}/>
                       <span style={{fontFamily:F.display,fontSize:12,fontWeight:600,color:C.text,whiteSpace:"nowrap"}}>{m.name.split(" ").pop()}</span>
                     </div>
                   </td>
@@ -2438,10 +2337,8 @@ function VoteScorecardPanel({nav,wb}){
                     const v=getMemberVote(b,m.id);
                     const col=voteColor(v);
                     return(
-                      <td key={b.id} style={{padding:"7px 8px",textAlign:"center",borderBottom:"1px solid rgba(221,226,237,0.5)"}}>
-                        <div style={{width:24,height:24,borderRadius:7,background:v==="Yea"?"rgba(22,163,74,0.08)":v==="Nay"?"rgba(220,38,38,0.08)":"rgba(203,213,225,0.3)",display:"inline-flex",alignItems:"center",justifyContent:"center",fontFamily:F.mono,fontSize:11,fontWeight:700,color:col,border:"1px solid "+(v==="Yea"?"rgba(22,163,74,0.15)":v==="Nay"?"rgba(220,38,38,0.15)":"rgba(203,213,225,0.4)")}}>
-                          {voteLabel(v)}
-                        </div>
+                      <td key={b.id} style={{padding:"7px 8px",textAlign:"center",borderBottom:"1px solid rgba(221,226,237,0.4)"}}>
+                        <span style={{fontFamily:F.mono,fontSize:12,fontWeight:700,color:col}}>{voteLabel(v)}</span>
                       </td>
                     );
                   })}
@@ -2452,10 +2349,10 @@ function VoteScorecardPanel({nav,wb}){
         </table>
       </div>
       {/* Legend */}
-      <div style={{display:"flex",gap:12,padding:"8px 16px 4px",borderTop:"1px solid rgba(221,226,237,0.5)"}}>
+      <div style={{display:"flex",gap:14,padding:"8px 16px 4px"}}>
         {[["✓","Yea","#16a34a"],["✗","Nay","#dc2626"],["·","No data","#94a3b8"]].map(([sym,lbl,col])=>(
-          <div key={lbl} style={{display:"flex",alignItems:"center",gap:5}}>
-            <div style={{width:18,height:18,borderRadius:5,background:col+"14",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:F.mono,fontSize:10,fontWeight:700,color:col,border:"1px solid "+col+"20"}}>{sym}</div>
+          <div key={lbl} style={{display:"flex",alignItems:"center",gap:4}}>
+            <span style={{fontFamily:F.mono,fontSize:12,fontWeight:700,color:col}}>{sym}</span>
             <span style={{fontFamily:F.body,fontSize:10,color:C.textM}}>{lbl}</span>
           </div>
         ))}
@@ -2489,26 +2386,22 @@ function BillFunnelPanel({nav}){
           const conv=i>0&&counts[i-1].n>0?Math.round((s.n/counts[i-1].n)*100):100;
           return(
             <div key={s.key} onMouseEnter={()=>setHover(s.key)} onMouseLeave={()=>setHover(null)}>
-              {/* Connector */}
+              {/* Conversion hint */}
               {i>0&&(
-                <div style={{display:"flex",alignItems:"center",gap:8,padding:"3px 0 3px 36px"}}>
-                  <div style={{width:1,height:12,background:C.border,flexShrink:0}}/>
-                  <span style={{fontFamily:F.mono,fontSize:8,fontWeight:600,color:C.textM,background:C.bg2,padding:"1px 6px",borderRadius:4,border:"1px solid "+C.border,letterSpacing:0.3}}>{conv}% advance</span>
+                <div style={{padding:"2px 0 2px 8px"}}>
+                  <span style={{fontFamily:F.body,fontSize:10,color:C.textM}}>{conv}% advance</span>
                 </div>
               )}
               {/* Stage row */}
-              <div style={{display:"flex",alignItems:"center",gap:10,padding:"7px 8px",borderRadius:9,transition:"background 0.12s",background:isHov?"rgba(15,29,58,0.025)":"transparent",cursor:"default"}}>
-                {/* Count badge */}
-                <div style={{width:32,height:32,borderRadius:9,background:"#fff",border:"1px solid "+C.border,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 3px rgba(15,29,58,0.06)"}}>
-                  <span style={{fontFamily:"'Bebas Neue',serif",fontSize:18,color:C.text,lineHeight:1}}>{s.n}</span>
-                </div>
+              <div style={{display:"flex",alignItems:"center",gap:10,padding:"6px 8px",borderRadius:6,transition:"background 0.12s",background:isHov?"rgba(15,29,58,0.025)":"transparent",cursor:"default"}}>
+                <span style={{fontFamily:F.display,fontSize:18,fontWeight:700,color:C.text,minWidth:36,textAlign:"right",flexShrink:0,lineHeight:1}}>{s.n}</span>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
-                    <span style={{fontFamily:F.display,fontSize:12,fontWeight:600,color:C.text,letterSpacing:"-0.1px"}}>{s.label}</span>
-                    <span style={{fontFamily:F.mono,fontSize:9,fontWeight:600,color:C.text2}}>{pct}%</span>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                    <span style={{fontFamily:F.display,fontSize:12,fontWeight:600,color:C.text}}>{s.label}</span>
+                    <span style={{fontFamily:F.body,fontSize:10,color:C.textM}}>{pct}%</span>
                   </div>
-                  <div style={{height:4,background:C.bg2,borderRadius:9999,overflow:"hidden",border:"1px solid "+C.border}}>
-                    <div style={{height:"100%",borderRadius:9999,background:C.navy,opacity:0.3+0.7*(barW/100),width:barW+"%",transition:"width 0.6s cubic-bezier(0.22,1,0.36,1)"}}/>
+                  <div style={{height:3,background:C.bg2,borderRadius:9999,overflow:"hidden"}}>
+                    <div style={{height:"100%",borderRadius:9999,background:C.navy,opacity:0.35+0.65*(barW/100),width:barW+"%",transition:"width 0.6s cubic-bezier(0.22,1,0.36,1)"}}/>
                   </div>
                 </div>
               </div>
@@ -2517,25 +2410,23 @@ function BillFunnelPanel({nav}){
         })}
         {/* Failed/Vetoed */}
         {terminal>0&&(
-          <div style={{display:"flex",alignItems:"center",gap:10,padding:"7px 8px",marginTop:4,borderTop:"1px solid "+C.border}}>
-            <div style={{width:32,height:32,borderRadius:9,background:"#fff",border:"1px solid "+C.border,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-              <span style={{fontFamily:"'Bebas Neue',serif",fontSize:18,color:C.textM,lineHeight:1}}>{terminal}</span>
-            </div>
+          <div style={{display:"flex",alignItems:"center",gap:10,padding:"6px 8px",marginTop:2}}>
+            <span style={{fontFamily:F.display,fontSize:18,fontWeight:700,color:C.textM,minWidth:36,textAlign:"right",flexShrink:0,lineHeight:1}}>{terminal}</span>
             <span style={{fontFamily:F.display,fontSize:12,fontWeight:500,color:C.textM,flex:1}}>Failed / Vetoed</span>
-            <span style={{fontFamily:F.mono,fontSize:9,fontWeight:600,color:C.textM}}>{Math.round((terminal/total)*100)}%</span>
+            <span style={{fontFamily:F.body,fontSize:10,color:C.textM}}>{Math.round((terminal/total)*100)}%</span>
           </div>
         )}
       </div>
-      {/* Summary strip */}
-      <div style={{marginTop:14,display:"flex",borderRadius:10,border:"1px solid "+C.border,overflow:"hidden",background:"#fff"}}>
+      {/* Summary row */}
+      <div style={{marginTop:12,display:"flex",gap:20,paddingTop:10,borderTop:"1px solid "+C.border}}>
         {[
-          {label:"Total",val:total},
+          {label:"Total bills",val:total},
           {label:"Active",val:bills.filter(b=>!["signed_into_law","failed","vetoed"].includes(b.status)).length},
           {label:"Enacted",val:bills.filter(b=>b.status==="signed_into_law").length},
-        ].map((s,i)=>(
-          <div key={s.label} style={{flex:1,textAlign:"center",padding:"10px 4px",borderRight:i<2?"1px solid "+C.border:"none",background:i===0?C.bg:"#fff"}}>
-            <div style={{fontFamily:"'Bebas Neue',serif",fontSize:22,color:C.text,lineHeight:1}}>{s.val}</div>
-            <div style={{fontFamily:F.mono,fontSize:8,fontWeight:600,color:C.textM,letterSpacing:0.6,textTransform:"uppercase",marginTop:2}}>{s.label}</div>
+        ].map(s=>(
+          <div key={s.label}>
+            <div style={{fontFamily:F.display,fontSize:20,fontWeight:700,color:C.text,lineHeight:1}}>{s.val}</div>
+            <div style={{fontFamily:F.body,fontSize:10,color:C.textM,marginTop:2}}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -2550,21 +2441,24 @@ function HomeScreen({nav,wb,toggleB,wm,toggleM,newsOutlet,switchTab}){
   const[locked,setLocked]=useState(()=>{try{return localStorage.getItem("civly-layout-locked")==="1";}catch{return false;}});
   const toggleLock=()=>{const v=!locked;setLocked(v);try{if(v)localStorage.setItem("civly-layout-locked","1");else localStorage.removeItem("civly-layout-locked");}catch{}};
   const[addOpen,setAddOpen]=useState(false);
+  // drag state only tracks id+insertIdx (slot position) — ghost position goes to a ref
   const[drag,setDrag]=useState(null);
+  const dragGhostRef=useRef(null); // DOM ref for the floating ghost — updated directly, no setState
+  const dragMetaRef=useRef(null);  // {ox,oy,w,h,label} — never causes re-render
   const gridRef=useRef(null);
   const panelsRef=useRef(panels);
   const panelElsRef=useRef({});
   useEffect(()=>{panelsRef.current=panels;},[panels]);
 
   const save=p=>{setPanels(p);try{localStorage.setItem(STORAGE_KEY,JSON.stringify(p));}catch{}};
-  const removePanel=id=>save(panels.filter(p=>p.id!==id));
-  const resizePanel=id=>save(panels.map(p=>p.id===id?{...p,w:p.w<=4?8:p.w<=8?12:4}:p));
-  const movePanelUp=id=>{const i=panels.findIndex(p=>p.id===id);if(i<=0)return;const a=[...panels];[a[i-1],a[i]]=[a[i],a[i-1]];save(a);};
-  const movePanelDown=id=>{const i=panels.findIndex(p=>p.id===id);if(i>=panels.length-1)return;const a=[...panels];[a[i],a[i+1]]=[a[i+1],a[i]];save(a);};
-  const addPanel=cfg=>{save([...panels,{...cfg,id:"p"+Date.now()}]);setAddOpen(false);};
+  const removePanel=useCallback(id=>save(panelsRef.current.filter(p=>p.id!==id)),[]);
+  const resizePanel=useCallback(id=>save(panelsRef.current.map(p=>p.id===id?{...p,w:p.w<=4?8:p.w<=8?12:4}:p)),[]);
+  const movePanelUp=useCallback(id=>{const ps=panelsRef.current;const i=ps.findIndex(p=>p.id===id);if(i<=0)return;const a=[...ps];[a[i-1],a[i]]=[a[i],a[i-1]];save(a);},[]);
+  const movePanelDown=useCallback(id=>{const ps=panelsRef.current;const i=ps.findIndex(p=>p.id===id);if(i>=ps.length-1)return;const a=[...ps];[a[i],a[i+1]]=[a[i+1],a[i]];save(a);},[]);
+  const addPanel=cfg=>{save([...panelsRef.current,{...cfg,id:"p"+Date.now()}]);setAddOpen(false);};
   const resetLayout=()=>{save(DEFAULT_PANELS);};
 
-  const startPanelDrag=(e,panelId)=>{
+  const startPanelDrag=useCallback((e,panelId)=>{
     if(locked)return;
     if(e.target.tagName==="BUTTON"||e.target.closest("button"))return;
     const el=panelElsRef.current[panelId];
@@ -2576,7 +2470,8 @@ function HomeScreen({nav,wb,toggleB,wm,toggleM,newsOutlet,switchTab}){
     const panel=panelsRef.current.find(p=>p.id===panelId);
     const label=PANEL_DEFS[panel?.type]?.label||"Panel";
 
-    // Find insert position into the withoutDragged array using nearest panel center
+    dragMetaRef.current={ox,oy,w:rect.width,h:rect.height,label};
+
     const getInsertIdx=(clientX,clientY)=>{
       const others=panelsRef.current.filter(p=>p.id!==panelId);
       if(!others.length)return 0;
@@ -2591,19 +2486,39 @@ function HomeScreen({nav,wb,toggleB,wm,toggleM,newsOutlet,switchTab}){
       const bestEl=panelElsRef.current[others[bestI].id];
       if(!bestEl)return bestI;
       const r=bestEl.getBoundingClientRect();
-      // Left half of panel → insert before, right half → insert after
       return clientX<r.left+r.width/2?bestI:bestI+1;
     };
 
-    setDrag({id:panelId,x:e.clientX-ox,y:e.clientY-oy,w:rect.width,h:rect.height,ox,oy,insertIdx:null,label});
+    // Initial drag state — triggers one render to show slot
+    setDrag({id:panelId,insertIdx:0,w:rect.width,h:rect.height});
     document.body.style.userSelect="none";
     document.body.style.cursor="grabbing";
 
+    // Position ghost via DOM ref — zero React re-renders during move
+    if(dragGhostRef.current){
+      dragGhostRef.current.style.display="flex";
+      dragGhostRef.current.style.left=(e.clientX-ox)+"px";
+      dragGhostRef.current.style.top=(e.clientY-oy)+"px";
+      dragGhostRef.current.style.width=Math.min(rect.width,400)+"px";
+      dragGhostRef.current.querySelector(".ghost-label").textContent=label;
+    }
+
     const onMove=mv=>{
-      const insertIdx=getInsertIdx(mv.clientX,mv.clientY);
-      setDrag(d=>d?{...d,x:mv.clientX-d.ox,y:mv.clientY-d.oy,insertIdx}:null);
+      // Update ghost position directly on DOM — no setState
+      if(dragGhostRef.current){
+        const meta=dragMetaRef.current;
+        dragGhostRef.current.style.left=(mv.clientX-meta.ox)+"px";
+        dragGhostRef.current.style.top=(mv.clientY-meta.oy)+"px";
+      }
+      // Only setState when insertIdx changes (rare)
+      const newIdx=getInsertIdx(mv.clientX,mv.clientY);
+      setDrag(d=>{
+        if(!d||d.insertIdx===newIdx)return d;
+        return{...d,insertIdx:newIdx};
+      });
     };
     const onUp=()=>{
+      if(dragGhostRef.current)dragGhostRef.current.style.display="none";
       setDrag(d=>{
         if(d){
           const ps=panelsRef.current;
@@ -2622,7 +2537,7 @@ function HomeScreen({nav,wb,toggleB,wm,toggleM,newsOutlet,switchTab}){
     };
     window.addEventListener("pointermove",onMove);
     window.addEventListener("pointerup",onUp);
-  };
+  },[locked]);
 
   const handleResizeStart=(e,id)=>{
     if(locked){e.preventDefault();return;}
@@ -2630,12 +2545,14 @@ function HomeScreen({nav,wb,toggleB,wm,toggleM,newsOutlet,switchTab}){
     const startX=e.clientX;
     const startW=panelsRef.current.find(p=>p.id===id)?.w||4;
     const gridWidth=gridRef.current?.offsetWidth||900;
-    // 12 cols, 11 gaps of 14px → one col+gap unit
     const unitWidth=(gridWidth-11*14)/12+14;
     document.body.style.cursor="ew-resize";
+    let lastW=startW;
     const onMove=mv=>{
       const dx=mv.clientX-startX;
       const newW=Math.max(2,Math.min(12,Math.round(startW+dx/unitWidth)));
+      if(newW===lastW)return; // skip if unchanged
+      lastW=newW;
       setPanels(prev=>prev.map(p=>p.id===id?{...p,w:newW}:p));
     };
     const onUp=()=>{
@@ -2659,7 +2576,6 @@ function HomeScreen({nav,wb,toggleB,wm,toggleM,newsOutlet,switchTab}){
       case"bill_news":return<BillNewsPanelContent config={panel.config} nav={nav} newsOutlet={newsOutlet}/>;
       case"watchlist":return<WatchlistPanelContent nav={nav} wb={wb} toggleB={toggleB} wm={wm} toggleM={toggleM}/>;
       case"leg_chart":return<LegProgressChartPanel nav={nav}/>;
-      case"leg_stats":return<LegStatsChartPanel/>;
       case"voting_dist":return<VotingDistChartPanel nav={nav}/>;
       case"pipeline":return<BillPipelinePanel nav={nav} wb={wb} toggleB={toggleB}/>;
       case"activity":return<ActivityFeedPanel nav={nav}/>;
@@ -2667,6 +2583,7 @@ function HomeScreen({nav,wb,toggleB,wm,toggleM,newsOutlet,switchTab}){
       case"party_votes":return<PartyLineVotesPanel nav={nav}/>;
       case"vote_scorecard":return<VoteScorecardPanel nav={nav} wb={wb}/>;
       case"bill_funnel":return<BillFunnelPanel nav={nav}/>;
+      case"markets":return<MarketsDashPanel nav={nav}/>;
       default:return null;
     }
   };
@@ -2759,12 +2676,12 @@ function HomeScreen({nav,wb,toggleB,wm,toggleM,newsOutlet,switchTab}){
 
       {addOpen&&<AddPanelModal onAdd={addPanel} onClose={()=>setAddOpen(false)}/>}
 
-      {/* Floating ghost follows cursor */}
-      {drag&&<div style={{position:"fixed",left:drag.x,top:drag.y,width:Math.min(drag.w,400),pointerEvents:"none",zIndex:9999,background:C.navy,borderRadius:12,boxShadow:"0 32px 80px rgba(0,0,0,0.4),0 8px 24px rgba(0,0,0,0.2)",transform:"rotate(1.5deg) scale(1.04)",display:"flex",alignItems:"center",padding:"11px 18px",gap:10,overflow:"hidden",opacity:0.96}}>
+      {/* Floating ghost — always rendered, shown/hidden via display:none. Position updated via DOM ref, never via setState. */}
+      <div ref={dragGhostRef} style={{display:"none",position:"fixed",left:0,top:0,pointerEvents:"none",zIndex:9999,background:C.navy,borderRadius:12,boxShadow:"0 32px 80px rgba(0,0,0,0.4),0 8px 24px rgba(0,0,0,0.2)",transform:"rotate(1.5deg) scale(1.04)",alignItems:"center",padding:"11px 18px",gap:10,overflow:"hidden",opacity:0.96}}>
         <svg width="10" height="14" viewBox="0 0 10 14" fill="rgba(255,255,255,0.45)"><circle cx="2.5" cy="2" r="1.5"/><circle cx="7.5" cy="2" r="1.5"/><circle cx="2.5" cy="7" r="1.5"/><circle cx="7.5" cy="7" r="1.5"/><circle cx="2.5" cy="12" r="1.5"/><circle cx="7.5" cy="12" r="1.5"/></svg>
-        <span style={{fontFamily:F.mono,fontSize:10,fontWeight:600,color:"rgba(255,255,255,0.92)",letterSpacing:1.2,textTransform:"uppercase",flex:1}}>{drag.label}</span>
+        <span className="ghost-label" style={{fontFamily:F.mono,fontSize:10,fontWeight:600,color:"rgba(255,255,255,0.92)",letterSpacing:1.2,textTransform:"uppercase",flex:1}}/>
         <div style={{position:"absolute",right:0,top:0,bottom:0,width:50,background:"linear-gradient(90deg,transparent,rgba(0,0,0,0.25))"}}/>
-      </div>}
+      </div>
     </div>
   );
 }
@@ -4093,6 +4010,542 @@ function SCOTUSCaseDetail({c,onBack}){
   );
 }
 
+// ─── FINANCE SCREEN ───────────────────────────────────────────
+const FINANCE_SECTORS=[
+  {key:"all",label:"All Sectors"},
+  {key:"equities",label:"Equities"},
+  {key:"bonds",label:"Bonds"},
+  {key:"energy",label:"Energy"},
+  {key:"healthcare",label:"Healthcare"},
+  {key:"realestate",label:"Real Estate"},
+  {key:"defense",label:"Defense"},
+  {key:"tech",label:"Tech"},
+  {key:"banking",label:"Banking"},
+];
+
+// magnitude: 1-3 (minor / moderate / major market mover)
+// passProb: estimated probability of enactment
+// tickers: directly exposed equities/ETFs
+// mechanism: how the bill creates the impact
+// risk: what could change the outlook
+const FINANCE_BILLS=[
+  {
+    billId:"b1",
+    passProb:100,
+    sectors:["equities","bonds","banking","healthcare"],
+    impacts:{
+      equities:{
+        dir:1,label:"Bullish",magnitude:3,
+        tickers:["SPY","QQQ","XLF","IVV"],
+        mechanism:"Permanent 21% corporate tax rate removes uncertainty that weighed on forward earnings models since 2025 sunset risk. EPS estimates revised up 4–6% on passage. Tips and overtime deductions boost consumer spending capacity — retail and discretionary sectors see secondary lift.",
+        detail:"Morgan Stanley revised S&P 500 EPS target +$12 on passage. Small-cap (IWM) outperforms as TCJA's pass-through deduction disproportionately benefits private businesses that feed public supply chains.",
+        risk:"Yield spike from deficit financing could compress multiples and reverse gains. Any Medicaid cut injunction could delay full implementation.",
+      },
+      bonds:{
+        dir:-1,label:"Bearish",magnitude:3,
+        tickers:["TLT","IEF","BND","TMF"],
+        mechanism:"CBO projects $3.2T added to 10-year deficit. Treasury must issue an estimated $400–500B in additional long-dated bonds annually. Supply-demand imbalance pushes yields up — 10-yr moved from 4.31% to 4.53% in the two weeks following passage.",
+        detail:"Primary dealers flagged record coupon issuance in July 2025 refunding announcements. Fed's QT program running simultaneously removes ~$60B/month from market — combined with fiscal expansion, this is the most pressure on long Treasuries since 2022.",
+        risk:"If growth disappoints or recession risk rises, flight-to-safety demand could absorb new supply and cap yield upside.",
+      },
+      banking:{
+        dir:1,label:"Bullish",magnitude:2,
+        tickers:["XLF","JPM","BAC","GS","KRE"],
+        mechanism:"Lower corporate tax rates directly expand after-tax ROE for large banks. Deregulatory stance (reduced CFPB activity, lighter Basel III endgame) compounds the tailwind. Tips deduction increases consumer cash flow, reducing near-term charge-off risk.",
+        detail:"JPMorgan guided EPS +$0.40/share from TCJA permanence. Regional banks (KRE) benefit more proportionally — many operate as pass-throughs and see full deduction value. Goldman's capital markets division benefits from M&A reactivation as deal certainty improves with lower rates.",
+        risk:"Medicaid cuts reducing healthcare spending could hurt consumer loan performance in southern states with high Medicaid enrollment.",
+      },
+      healthcare:{
+        dir:-1,label:"Bearish",magnitude:2,
+        tickers:["UNH","CVS","HUM","MOH","CNC","HCA"],
+        mechanism:"Medicaid work requirements eliminate coverage for an estimated 8.6M adults per CBO — 60% of that population is served by managed care organizations (MCOs). Molina (MOH), Centene (CNC), and Humana (HUM) derive 30–55% of revenue from Medicaid. Revenue per member falls as the healthiest members disenroll first, worsening risk pools.",
+        detail:"Centene stock fell 11% in the 5 trading days after Senate passage. Hospital sector faces dual pressure: uncompensated care rises as newly uninsured seek emergency services, while Medicaid inpatient days decline. HCA and Tenet Healthcare flagged $200–400M EBITDA exposure annually.",
+        risk:"Legal challenges to work requirements in federal courts could delay or block implementation, preserving near-term MCO revenue.",
+      },
+    },
+  },
+  {
+    billId:"b4",
+    passProb:100,
+    sectors:["equities","bonds","defense","banking"],
+    impacts:{
+      equities:{
+        dir:0,label:"Neutral",magnitude:1,
+        tickers:["SPY","VTI"],
+        mechanism:"Government shutdown avoidance is already priced in by day of signing. Markets treat stopgap funding as baseline — no positive re-rating occurs without a structural deficit deal. Averts tail risk of agencies furloughing regulatory staff, which would have delayed M&A reviews at DOJ.",
+        detail:"S&P 500 moved less than 0.2% on passage day. The bill's economic significance is primarily in what it avoids rather than what it creates.",
+        risk:"DHS two-week extension resets shutdown clock to Feb 14 — any failure there would hit defense, border, and FEMA-adjacent contractors.",
+      },
+      bonds:{
+        dir:-1,label:"Bearish",magnitude:2,
+        tickers:["TLT","IEF","GOVT"],
+        mechanism:"$1.7T in new discretionary authority adds to the supply of government debt. Continuing resolutions typically fund at prior-year rates plus inflation adjustments — this one is no different, locking in elevated post-COVID spending baselines.",
+        detail:"The 10-year yield rose 8bps in the week following passage, partly attributable to fiscal supply concerns layered on top of strong jobs data. The bill represents the fourth consecutive year of $1.7T+ discretionary budgets.",
+        risk:"A deficit reduction deal or surprise Fed pivot to cuts would overwhelm fiscal supply pressures.",
+      },
+      defense:{
+        dir:1,label:"Bullish",magnitude:1,
+        tickers:["LMT","RTX","NOC","GD","ITA"],
+        mechanism:"Baseline DoD funding continues without disruption. Defense contractors avoided the cost overruns and schedule slippage that accompany shutdown-related stop-work orders. Lockheed Martin alone cited $150M in potential quarterly impact from a prolonged shutdown.",
+        detail:"The modest DoD top-line bump (approximately +2.4% vs FY2025) covers munitions replenishment commitments made to NATO allies. Raytheon's Stinger and Javelin production lines benefit from continued NDAA-authorized supplemental funding.",
+        risk:"DHS funding expiry Feb 14 could create a second partial shutdown affecting some DoD civilian employees — though core military operations continue regardless.",
+      },
+      banking:{
+        dir:0,label:"Neutral",magnitude:1,
+        tickers:["XLF","KRE"],
+        mechanism:"Government employee direct deposits remain uninterrupted. During 2018–19 shutdown, JPMorgan and others reported elevated overdraft activity and loan payment deferrals from federal workers — all of that avoided here.",
+        detail:"The Treasury's General Account was at $620B at signing — no near-term debt ceiling pressure. Short-term T-bill market unaffected.",
+        risk:"Prolonged DHS negotiations could trigger payment timing stress in some government contractor supply chains.",
+      },
+    },
+  },
+  {
+    billId:"b5",
+    passProb:100,
+    sectors:["energy","tech","bonds"],
+    impacts:{
+      energy:{
+        dir:-1,label:"Bearish",magnitude:1,
+        tickers:["ICLN","FSLR","ENPH","NEE","SEDG"],
+        mechanism:"DOE Office of Energy Efficiency and Renewable Energy (EERE) funding cut 4% from FY2025. Loan Programs Office (LPO) administrative budget trimmed, slowing clean energy loan guarantee pipeline. Direct impact is modest but signals legislative direction toward fossil fuel deregulation.",
+        detail:"First Solar (FSLR) and Enphase (ENPH) are most exposed to federal incentive program continuity. The IRA's 45X manufacturing tax credits remain intact — this appropriations cut does not affect those credits, limiting downside.",
+        risk:"IRA manufacturing credits are mandatory spending — appropriations can't cut them. Clean energy equity selloff on this bill overstates the actual policy impact.",
+      },
+      tech:{
+        dir:0,label:"Neutral",magnitude:1,
+        tickers:["QQQ","MSFT","GOOG"],
+        mechanism:"NIST funding flat means AI safety framework development continues on existing timeline. NASA budget maintained; commercial launch and satellite contracts (SpaceX, ULA, Boeing) unaffected. Census funding matters for tech's ad-targeting data ecosystem but minimally.",
+        detail:"The bill funds NSF at $9.1B vs $9.4B requested — a modest drag on university research grants that flow into AI and quantum computing pipelines. Long-term negative for research universities but immaterial to large-cap tech.",
+        risk:"Flat NSF funding compounding over multiple years could widen US-China research gap in advanced computing.",
+      },
+      bonds:{
+        dir:-1,label:"Bearish",magnitude:1,
+        tickers:["TLT","SHY","IEF"],
+        mechanism:"Part of the broader FY2026 appropriations cycle contributing to $1.7T+ discretionary baseline. Incremental supply pressure on Treasuries. Army Corps of Engineers and DOE project financing requires Treasury issuance.",
+        detail:"The Army Corps portion funds $8.2B in water infrastructure — much of this via bonds rather than direct appropriations, adding to municipal and agency debt supply.",
+        risk:"If spending totals come in below enacted levels due to impoundment (via DOGE), actual debt issuance could undershoot projections.",
+      },
+    },
+  },
+  {
+    billId:"b6",
+    passProb:62,
+    sectors:["tech","energy","defense","equities"],
+    impacts:{
+      tech:{
+        dir:1,label:"Bullish",magnitude:3,
+        tickers:["NVDA","AMD","INTC","MP","LTHM","ALB","QQQ"],
+        mechanism:"Gallium, germanium, cobalt, and rare earth elements are essential for GPU dies, HBM memory, and advanced packaging. China currently controls ~80% of global gallium/germanium processing and restricted exports in 2023. A domestic U.S. supply chain removes single-point-of-failure risk for NVIDIA and AMD fab supply.",
+        detail:"MP Materials (MP) — the only rare earth mine and processor operating at scale in the U.S. — is the most direct beneficiary. Livent/Arcadium (ALTM) and Albemarle (ALB) benefit from lithium supply chain grants. Semiconductor equipment companies (AMAT, KLAC) see secondary demand as domestic fabs expand to consume domestically sourced materials.",
+        risk:"18-month assessment timeline means no near-term supply chain change. Bill must still pass Senate (62% prob). China could accelerate export restrictions before U.S. supply comes online.",
+      },
+      energy:{
+        dir:1,label:"Bullish",magnitude:2,
+        tickers:["MP","LTHM","ALB","SQM","ALTM","XME"],
+        mechanism:"Opens federal lands and streamlines permitting for lithium, cobalt, nickel, and manganese extraction. DOE grants for refining infrastructure directly fund companies attempting to build domestic battery-grade material supply chains — a $40B+ market currently dominated by China, Japan, and South Korea.",
+        detail:"Nevada Lithium and ioneer's Rhyolite Ridge project are positioned to receive loan guarantees. The bill's supply chain vulnerability report will likely recommend lithium strategic reserve — analogous to the Strategic Petroleum Reserve — which would require government purchases from domestic producers.",
+        risk:"Mining permitting reform faces legal challenges from environmental groups. Senate passage probability 62% — any amendment weakening permitting streamlining reduces the bill's economic value.",
+      },
+      defense:{
+        dir:1,label:"Bullish",magnitude:2,
+        tickers:["LMT","RTX","NOC","HII","BAH"],
+        mechanism:"F-35 requires approximately 900 lbs of rare earth elements per aircraft. Tomahawk cruise missiles, Virginia-class submarine motors, and Aegis radar arrays all depend on neodymium and dysprosium magnets currently sourced from China. Domestic supply reduces cost volatility and eliminates national security supply chain risk.",
+        detail:"DoD's Defense Logistics Agency has flagged rare earth supply as a Tier 1 supply chain vulnerability since 2020. The bill requires classified DoD assessment within 6 months — likely to recommend domestic procurement preferences that benefit MP Materials and emerging processors.",
+        risk:"Timeline to domestic production scale is 5-7 years minimum — the defense benefit is long-duration. Near-term defense stock move is anticipatory.",
+      },
+      equities:{
+        dir:1,label:"Bullish",magnitude:1,
+        tickers:["IWM","XME","REMX"],
+        mechanism:"Broad equity tailwind from reduced China supply chain dependency — reduces tail risk across tech, auto, and defense sectors. REMX (VanEck Rare Earth/Strategic Metals ETF) is the most direct play.",
+        detail:"REMX holdings include MP Materials, Lynas Rare Earths, and Energy Fuels — all directly benefit from domestic sourcing mandates. Small-cap mining companies benefit from federal grant eligibility.",
+        risk:"Bill is still on House floor (not yet passed Senate). Sentiment-driven moves may give back if Senate passage stalls.",
+      },
+    },
+  },
+  {
+    billId:"b8",
+    passProb:55,
+    sectors:["realestate","equities","bonds"],
+    impacts:{
+      realestate:{
+        dir:1,label:"Bullish",magnitude:2,
+        tickers:["SKY","CVCO","NVR","DHI","TOL","ITB"],
+        mechanism:"Manufactured/factory-built homes are the primary affordable housing product for the bottom 30% of the income distribution. Removing DOE energy efficiency mandates (which added $7K–$10K per unit) directly expands the addressable buyer pool. Skyline Champion (SKY) and Cavco Industries (CVCO) are pure-play manufactured home producers.",
+        detail:"Skyline Champion shares rallied 8.3% on passage day. The company produces ~50,000 homes annually — at $8K average cost reduction, that's ~$400M in total addressable cost savings. Land-lease community operators (Sun Communities, UDR) benefit indirectly as new home affordability drives community fill rates.",
+        risk:"Energy efficiency standards also reduce utility costs over time — lower-income residents in less-efficient homes will face higher long-run operating costs, which could impair mortgage performance. Senate passage at ~55% probability.",
+      },
+      equities:{
+        dir:0,label:"Neutral",magnitude:1,
+        tickers:["XHB","ITB"],
+        mechanism:"Manufactured home cost reduction expands the housing supply segment below $150K — a segment where site-built builders (DHI, LEN, NVR) don't compete. Minimal cannibalization of traditional homebuilder revenue.",
+        detail:"The 22M Americans currently living in manufactured homes represent a captive renovation and replacement market. Manufactured homes turn over at 15-year average cycles vs 25-year for site-built — durable demand floor for SKY and CVCO.",
+        risk:"If energy efficiency deregulation triggers state-level mandates as a counterresponse, multi-state manufacturers face compliance patchwork costs.",
+      },
+      bonds:{
+        dir:0,label:"Neutral",magnitude:1,
+        tickers:["MBB","VMBS","AGG"],
+        mechanism:"Manufactured home mortgages (chattel loans) are typically securitized outside of Fannie/Freddie GSE programs — they trade as non-agency collateral with higher spreads. Expanded origination volume modestly increases non-agency MBS supply.",
+        detail:"Freddie Mac's CHOICEHome program provides some agency backing for manufactured housing. Expanded supply under this bill could push Freddie to expand CHOICEHome limits — reducing spreads and improving affordability further.",
+        risk:"Non-agency manufactured home MBS has historically underperformed in downturns due to chattel loan structure — not a major systemic risk but worth monitoring in a recession scenario.",
+      },
+    },
+  },
+  {
+    billId:"b14",
+    passProb:38,
+    sectors:["equities","bonds","tech","defense"],
+    impacts:{
+      equities:{
+        dir:-1,label:"Bearish",magnitude:2,
+        tickers:["SAIC","CACI","LEIDOS","BAH","CSCO","HPE","DXC"],
+        mechanism:"DOGE's stated mission is eliminating duplicative contracts and improper payments. Federal IT services and management consulting firms with large government portfolios are directly exposed to contract cancellation. Booz Allen Hamilton (BAH) derives 97% of revenue from government; SAIC and Leidos are similarly concentrated.",
+        detail:"In its first 90 days, DOGE cancelled or paused approximately $105B in contracts (per administration claims, contested by GAO). Federal IT modernization contracts — many multi-year — are most exposed. Accenture Federal Services, IBM Federal, and Microsoft's Azure Government division have material exposure but are diversified enough that impact is manageable.",
+        risk:"Bill probability only 38% — DOGE currently operates without statutory authority and faces FACA compliance lawsuits. Congressional authorization could normalize its operations and reduce legal uncertainty, potentially capping the downside.",
+      },
+      bonds:{
+        dir:1,label:"Bullish",magnitude:2,
+        tickers:["TLT","IEF","GOVT","VGLT"],
+        mechanism:"If DOGE identifies and eliminates $500B+ in waste over 10 years (its stated goal, later revised to $150B more realistically), deficit trajectory improves. Bond markets would reprice long-end yields lower. Goldman estimates $100-200B in credible savings could reduce 10-year yields by 15-25bps.",
+        detail:"The market currently prices DOGE savings at roughly $50-80B over 10 years — well below stated targets. Statutory authorization and subpoena power would meaningfully increase DOGE's ability to compel agency compliance and achieve larger savings. If realized, this would be the most significant deficit-reducing legislation since the BCA caps of 2011.",
+        risk:"Political opposition from agencies and contractors, legal challenges, and implementation complexity make the high-end savings scenario speculative. The bond bull case requires DOGE to actually function effectively post-authorization.",
+      },
+      tech:{
+        dir:-1,label:"Bearish",magnitude:2,
+        tickers:["CSCO","DELL","HPE","MSFT","IBM"],
+        mechanism:"Federal technology contracts — including cloud infrastructure, cybersecurity, and legacy system modernization — are DOGE's primary identified savings targets. Data center consolidation mandates could disrupt multi-year cloud migration contracts with AWS GovCloud, Microsoft Azure Government, and Oracle Federal.",
+        detail:"The federal government spends ~$100B/year on IT. DOGE has already flagged duplicate software licenses ($2B+) and redundant data centers. Cisco's federal networking infrastructure contracts and Dell's hardware refresh cycles face cancellation risk. Microsoft Azure Government and AWS GovCloud are more insulated — cloud consolidation saves money; it doesn't eliminate the spend.",
+        risk:"Cloud and AI contracts are likely to survive or grow even under DOGE — efficiency initiatives accelerate migration away from legacy systems, which benefits hyperscalers over legacy IT services firms.",
+      },
+      defense:{
+        dir:-1,label:"Bearish",magnitude:1,
+        tickers:["BAH","SAIC","CACI","LEIDOS"],
+        mechanism:"Defense consulting and management advisory contracts are within DOGE scope. While core weapons systems and readiness contracts are protected, administrative overhead and support services contracts face scrutiny. Pentagon civilian workforce reduction proposals compound this.",
+        detail:"The DoD spent $43B on professional services in FY2024. Even a 10% reduction would materially impact BAH and SAIC revenues. However, NDAA-authorized programs are politically harder to cancel — DOGE's mandate is primarily discretionary civilian spending.",
+        risk:"Bipartisan support for defense spending means core defense contractors (LMT, RTX, NOC) are largely insulated. Consulting exposure is the primary risk vector.",
+      },
+    },
+  },
+  {
+    billId:"b15",
+    passProb:78,
+    sectors:["equities","bonds","defense","banking"],
+    impacts:{
+      equities:{
+        dir:-1,label:"Bearish",magnitude:2,
+        tickers:["SPY","IWM","XLF","TSA-adjacent: AAL","DAL","UAL"],
+        mechanism:"A DHS funding lapse shuts down TSA screening operations at major airports within 96 hours, triggering airline operational disruptions. ICE deportation flights halt, pausing the administration's enforcement agenda. FEMA disaster response degrades. Markets price in 0.3–0.6% S&P drawdown for each week of DHS shutdown based on 2018–19 precedent.",
+        detail:"Airlines are uniquely exposed — TSA slowdowns reduce throughput and trigger passenger compensation claims. Delta and United saw ~2% declines during the 2018-19 shutdown. Beyond airlines, federal contractor payment delays ripple into supply chains — 40,000+ companies have active DHS contracts.",
+        risk:"The Feb 14 deadline creates strong political pressure to resolve — 78% probability of passage. Short-term uncertainty is the primary risk, not structural market damage.",
+      },
+      bonds:{
+        dir:1,label:"Bullish",magnitude:1,
+        tickers:["SHY","BIL","TLT"],
+        mechanism:"Flight-to-safety bid for short-duration Treasuries (T-bills, 2-year notes) during shutdown uncertainty. Investors rotate from equities and credit into government paper. The effect is short-lived — typically reverses within days of resolution.",
+        detail:"2-year Treasury yield compressed 5-8bps during the Feb 1-3 partial shutdown episode. Similar dynamics expected. Long-end unaffected — shutdown doesn't change fiscal trajectory, just creates near-term payment delays.",
+        risk:"If shutdown extends beyond 2 weeks, concerns about Treasury debt service reliability (purely symbolic, given Treasury's legal obligation) could perversely hurt long bonds.",
+      },
+      defense:{
+        dir:-1,label:"Bearish",magnitude:1,
+        tickers:["LMT","RTX","GD","NOC"],
+        mechanism:"DHS is separate from DoD — core military operations are unaffected. However, some FEMA and Coast Guard operations that overlap with defense missions (disaster response, maritime security) face degradation. Defense contractors with DHS-specific contracts (border surveillance, drone systems) face stop-work orders.",
+        detail:"L3Harris and Elbit (US subsidiary) have active CBP surveillance contracts worth $1.8B. Palantir has DHS analytical contracts. These enter stop-work status within 24 hours of a lapse. Core DoD programs (F-35, Virginia-class, GBSD) are NDAA-funded and unaffected.",
+        risk:"A resolution before Feb 14 (78% likely) means any defense contract disruption is measured in days, not materially impacting quarterly revenue.",
+      },
+      banking:{
+        dir:-1,label:"Bearish",magnitude:1,
+        tickers:["JPM","BAC","WFC","USB","KRE"],
+        mechanism:"800,000+ DHS and associated federal employees face delayed paychecks. Regional banks and credit unions serving federal employee populations see elevated overdraft requests and loan payment deferrals. JPMorgan, Wells Fargo, and Bank of America all offered fee waivers and emergency loans during the 2018-19 shutdown.",
+        detail:"The 2018-19 35-day shutdown resulted in ~$3B in delayed federal worker pay. Banks absorbed roughly $80M in deferred payment costs — immaterial at the system level but notable for institutions with high federal employee customer concentration (USAA, Navy Federal, some mid-Atlantic regionals).",
+        risk:"Resolution within days means actual charge-off and credit loss impact is essentially zero. The market impact is sentiment-driven, not fundamental.",
+      },
+    },
+  },
+];
+
+const SECTOR_SUMMARY=[
+  {key:"equities",label:"US Equities",index:"S&P 500",val:"+1.8%",dir:1,spark:[4.1,4.3,4.0,4.5,4.6,4.4,4.7,4.9],note:"Tax cut tailwinds offset by deficit concerns and DOGE contractor risk"},
+  {key:"bonds",label:"Treasuries",index:"10-yr Yield",val:"4.82%",dir:-1,spark:[4.31,4.35,4.40,4.44,4.48,4.55,4.61,4.82],note:"Fiscal expansion pressuring yields; $3.2T+ new debt supply"},
+  {key:"energy",label:"Energy",index:"XLE",val:"+0.4%",dir:0,spark:[88,86,87,85,84,86,87,88],note:"Mixed: appropriations cuts offset by critical minerals upside"},
+  {key:"tech",label:"Technology",index:"QQQ",val:"+2.1%",dir:1,spark:[420,415,430,440,435,445,458,470],note:"Critical Minerals Act supports domestic chip and AI hardware supply chains"},
+];
+
+// ─── MARKETS DASHBOARD PANEL ─────────────────────────────
+const MARKET_SECTOR_KEYS=["equities","bonds","energy","healthcare","realestate","defense","tech","banking"];
+const SECTOR_LABELS={equities:"Equities",bonds:"Bonds",energy:"Energy",healthcare:"Healthcare",realestate:"Real Estate",defense:"Defense",tech:"Tech",banking:"Banking"};
+const SECTOR_COLORS={equities:"#1a4db8",bonds:"#6d28d9",energy:"#b45309",healthcare:"#15803d",realestate:"#0369a1",defense:"#8b2e2e",tech:"#7c3aed",banking:"#1e40af"};
+
+function MarketsDashPanel({nav}){
+  const[activeSectors,setActiveSectors]=useState(new Set(["equities","bonds","tech","healthcare"]));
+  const toggleSector=k=>setActiveSectors(prev=>{
+    const n=new Set(prev);
+    if(n.has(k)){if(n.size>1)n.delete(k);}else{n.add(k);}
+    return n;
+  });
+  // collect all bills that have an impact in any active sector
+  const rows=[];
+  FINANCE_BILLS.forEach(fb=>{
+    const bill=bills.find(b=>b.id===fb.billId);
+    if(!bill)return;
+    MARKET_SECTOR_KEYS.forEach(sk=>{
+      if(!activeSectors.has(sk))return;
+      const imp=fb.impacts?.[sk];
+      if(!imp)return;
+      rows.push({bill,fb,sk,imp});
+    });
+  });
+  // sort: bearish (dir -1) first, then bullish, then neutral; then by magnitude desc
+  rows.sort((a,b)=>{
+    const ds=Math.abs(b.imp.dir)-Math.abs(a.imp.dir);
+    if(ds!==0)return ds;
+    return b.imp.magnitude-a.imp.magnitude;
+  });
+  const DIR_COLOR={1:"#15803d","-1":"#dc2626",0:"#b45309"};
+  const DIR_LABEL={1:"▲ Bullish","-1":"▼ Bearish",0:"→ Mixed"};
+  return(
+    <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden"}}>
+      {/* Sector filter chips */}
+      <div style={{padding:"10px 12px 8px",borderBottom:"1px solid "+C.border,flexShrink:0}}>
+        <div style={{fontFamily:F.mono,fontSize:9,fontWeight:700,color:C.textM,letterSpacing:0.8,textTransform:"uppercase",marginBottom:6}}>Track Sectors</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+          {MARKET_SECTOR_KEYS.map(k=>{
+            const on=activeSectors.has(k);
+            const col=SECTOR_COLORS[k];
+            return(
+              <button key={k} onClick={()=>toggleSector(k)}
+                style={{all:"unset",cursor:"pointer",fontFamily:F.mono,fontSize:9,fontWeight:on?700:500,
+                  color:on?"#fff":C.textM,
+                  background:on?col:C.bg2,
+                  border:"1px solid "+(on?col:C.border),
+                  padding:"3px 8px",borderRadius:9999,transition:"all 0.12s",letterSpacing:0.2}}>
+                {SECTOR_LABELS[k]}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      {/* Bill/sector rows */}
+      <div style={{overflowY:"auto",flex:1}} className="civly-scroll">
+        {rows.length===0&&(
+          <div style={{padding:24,textAlign:"center",fontFamily:F.body,fontSize:12,color:C.textM}}>No market impacts for selected sectors.</div>
+        )}
+        {rows.map(({bill,fb,sk,imp},i)=>{
+          const col=SECTOR_COLORS[sk];
+          const dirCol=DIR_COLOR[String(imp.dir)];
+          const bars=[1,2,3].map(n=>(
+            <span key={n} style={{display:"inline-block",width:4,height:4+n*3,borderRadius:1,background:n<=imp.magnitude?dirCol:"#e2e8f0",marginLeft:1,verticalAlign:"bottom"}}/>
+          ));
+          return(
+            <div key={i} onClick={()=>nav("bill",{id:bill.id})}
+              style={{padding:"9px 12px",borderBottom:"1px solid "+C.border,cursor:"pointer",transition:"background 0.1s"}}
+              onMouseEnter={e=>e.currentTarget.style.background=C.bg}
+              onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
+                <span style={{fontFamily:F.mono,fontSize:8,fontWeight:700,color:col,background:col+"18",padding:"1px 6px",borderRadius:9999,letterSpacing:0.3,flexShrink:0}}>{SECTOR_LABELS[sk]}</span>
+                <span style={{fontFamily:F.mono,fontSize:8,fontWeight:700,color:dirCol,flexShrink:0}}>{DIR_LABEL[String(imp.dir)]}</span>
+                <span style={{marginLeft:"auto",display:"inline-flex",alignItems:"flex-end",gap:1,flexShrink:0}}>{bars}</span>
+              </div>
+              <div style={{fontFamily:F.display,fontSize:11,fontWeight:600,color:C.text,letterSpacing:"-0.1px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{bill.title}</div>
+              <div style={{fontFamily:F.body,fontSize:10,color:C.textM,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{imp.mechanism?.slice(0,90)}{imp.mechanism?.length>90?"…":""}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function FinanceScreen({nav}){
+  const[sector,setSector]=useState("all");
+  const[expanded,setExpanded]=useState({});
+
+  const toggle=(billId,sk)=>{
+    const key=billId+":"+sk;
+    setExpanded(e=>({...e,[key]:!e[key]}));
+  };
+
+  const filtered=FINANCE_BILLS.filter(fb=>sector==="all"||fb.sectors.includes(sector));
+  const statusOrder=["on_the_floor","passed_house","passed_senate","signed_into_law","in_committee","introduced"];
+  const sorted=[...filtered].sort((a,b)=>{
+    const ba=bills.find(x=>x.id===a.billId);
+    const bb=bills.find(x=>x.id===b.billId);
+    return statusOrder.indexOf(ba?.status)-statusOrder.indexOf(bb?.status);
+  });
+
+  const stageLabel={introduced:"Introduced",in_committee:"In Committee",on_the_floor:"On Floor",passed_house:"Passed House",passed_senate:"Passed Senate",signed_into_law:"Enacted"};
+  const stageCol={introduced:C.textM,in_committee:"#b45309",on_the_floor:"#c41e3a",passed_house:"#1e40af",passed_senate:"#1a4db8",signed_into_law:"#15803d"};
+
+  const magLabel=["","Minor","Moderate","Major"];
+  const magCol=["","#b45309","#1e40af","#c41e3a"];
+
+  // Inline sparkline for sector summary cards
+  const Spark=({data,col})=>{
+    const w=80,h=28,pad=2;
+    const min=Math.min(...data),max=Math.max(...data),range=max-min||1;
+    const pts=data.map((v,i)=>({x:pad+(i/(data.length-1))*(w-pad*2),y:h-pad-((v-min)/range)*(h-pad*2)}));
+    const line=pts.map((p,i)=>(i===0?`M${p.x},${p.y}`:`L${p.x},${p.y}`)).join(" ");
+    const area=`${line} L${pts[pts.length-1].x},${h} L${pts[0].x},${h} Z`;
+    return(
+      <svg width={w} height={h} style={{display:"block"}}>
+        <defs><linearGradient id={"spk-"+col.replace("#","")} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={col} stopOpacity="0.18"/><stop offset="100%" stopColor={col} stopOpacity="0"/>
+        </linearGradient></defs>
+        <path d={area} fill={`url(#spk-${col.replace("#","")})`}/>
+        <path d={line} fill="none" stroke={col} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx={pts[pts.length-1].x} cy={pts[pts.length-1].y} r="2" fill={col}/>
+      </svg>
+    );
+  };
+
+  return(
+    <div style={{maxWidth:1000,margin:"0 auto"}}>
+      {/* Header */}
+      <div style={{marginBottom:24}}>
+        <div style={{fontFamily:F.display,fontSize:28,fontWeight:700,color:C.text,letterSpacing:"-0.5px",marginBottom:4}}>Markets & Finance</div>
+        <div style={{fontFamily:F.body,fontSize:13,color:C.textM}}>Detailed legislative impact analysis by sector, mechanism, and exposed instruments</div>
+      </div>
+
+      {/* Sector summary cards */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:28}}>
+        {SECTOR_SUMMARY.map(s=>{
+          const col=s.dir>0?"#15803d":s.dir<0?"#c41e3a":"#b45309";
+          const isActive=sector===s.key;
+          return(
+            <div key={s.key} onClick={()=>setSector(isActive?"all":s.key)}
+              style={{background:"#fff",borderRadius:12,padding:"16px",border:"1px solid "+(isActive?C.navy:C.border),cursor:"pointer",transition:"all 0.15s",boxShadow:isActive?"0 4px 16px rgba(15,29,58,0.10)":C.cardShadow,position:"relative",overflow:"hidden"}}
+              onMouseEnter={e=>{if(!isActive){e.currentTarget.style.borderColor=C.navy+"50";e.currentTarget.style.boxShadow="0 4px 16px rgba(15,29,58,0.07)";}}}
+              onMouseLeave={e=>{if(!isActive){e.currentTarget.style.borderColor=C.border;e.currentTarget.style.boxShadow=C.cardShadow;}}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+                <div>
+                  <div style={{fontFamily:F.body,fontSize:10,color:C.textM,marginBottom:2}}>{s.index}</div>
+                  <div style={{fontFamily:F.display,fontSize:16,fontWeight:700,color:C.text,lineHeight:1}}>{s.val}</div>
+                </div>
+                <Spark data={s.spark} col={col}/>
+              </div>
+              <div style={{fontFamily:F.display,fontSize:12,fontWeight:600,color:C.text,marginBottom:3}}>{s.label}</div>
+              <div style={{fontFamily:F.body,fontSize:10,color:C.textM,lineHeight:1.4}}>{s.note}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Sector filter */}
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:20}}>
+        {FINANCE_SECTORS.map(s=>(
+          <button key={s.key} onClick={()=>setSector(s.key)}
+            style={{all:"unset",cursor:"pointer",fontFamily:F.body,fontSize:11,fontWeight:sector===s.key?600:400,
+              color:sector===s.key?"#fff":C.text2,
+              background:sector===s.key?C.navy:"#fff",
+              border:"1px solid "+(sector===s.key?C.navy:C.border),
+              padding:"5px 12px",borderRadius:9999,transition:"all 0.12s"}}>
+            {s.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Bill cards */}
+      <div style={{display:"flex",flexDirection:"column",gap:16}}>
+        {sorted.map(fb=>{
+          const bill=bills.find(b=>b.id===fb.billId);
+          if(!bill)return null;
+          const stage=bill.status;
+          const visibleSectors=sector==="all"?fb.sectors:fb.sectors.filter(s=>s===sector);
+          const isEnacted=stage==="signed_into_law";
+          return(
+            <div key={fb.billId} style={{background:"#fff",borderRadius:14,border:"1px solid "+C.border,overflow:"hidden",boxShadow:C.cardShadow}}>
+
+              {/* Bill header row */}
+              <div style={{display:"flex",alignItems:"flex-start",gap:14,padding:"16px 20px 14px",cursor:"pointer",borderBottom:"1px solid "+C.border}}
+                onClick={()=>nav("billDetail",bill.id)}>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:5,flexWrap:"wrap"}}>
+                    <span style={{fontFamily:F.mono,fontSize:9,color:C.textM}}>{bill.num}</span>
+                    <span style={{width:6,height:6,borderRadius:"50%",background:stageCol[stage]||C.textM,flexShrink:0,display:"inline-block"}}/>
+                    <span style={{fontFamily:F.body,fontSize:10,color:stageCol[stage]||C.textM,fontWeight:500}}>{stageLabel[stage]||stage}</span>
+                    {!isEnacted&&<span style={{fontFamily:F.mono,fontSize:9,color:C.textM}}>{fb.passProb}% enactment probability</span>}
+                  </div>
+                  <div style={{fontFamily:F.display,fontSize:15,fontWeight:700,color:C.text,lineHeight:1.3,marginBottom:4}}>{bill.title}</div>
+                  <div style={{fontFamily:F.body,fontSize:11,color:C.textM,lineHeight:1.5}}>{bill.sum.split(".")[0]}.</div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.textM} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,marginTop:4}}><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+
+              {/* Sector impact sections */}
+              <div>
+                {visibleSectors.map((sk,si)=>{
+                  const imp=fb.impacts[sk];
+                  if(!imp)return null;
+                  const col=imp.dir>0?"#15803d":imp.dir<0?"#c41e3a":"#b45309";
+                  const secDef=FINANCE_SECTORS.find(s=>s.key===sk);
+                  const expandKey=fb.billId+":"+sk;
+                  const isExp=expanded[expandKey];
+                  return(
+                    <div key={sk} style={{borderBottom:si<visibleSectors.length-1?"1px solid "+C.border:"none"}}>
+                      {/* Sector row — always visible */}
+                      <div style={{display:"grid",gridTemplateColumns:"160px 80px 1fr auto",gap:12,alignItems:"start",padding:"14px 20px",cursor:"pointer"}}
+                        onClick={()=>toggle(fb.billId,sk)}>
+                        {/* Sector + signal */}
+                        <div>
+                          <div style={{fontFamily:F.display,fontSize:12,fontWeight:600,color:C.text,marginBottom:3}}>{secDef?.label||sk}</div>
+                          <div style={{display:"flex",alignItems:"center",gap:4}}>
+                            <span style={{fontFamily:F.mono,fontSize:11,fontWeight:700,color:col}}>{imp.dir>0?"↑":imp.dir<0?"↓":"→"}</span>
+                            <span style={{fontFamily:F.mono,fontSize:9,fontWeight:600,color:col}}>{imp.label}</span>
+                          </div>
+                        </div>
+                        {/* Magnitude */}
+                        <div>
+                          <div style={{fontFamily:F.body,fontSize:9,color:C.textM,marginBottom:3}}>Impact</div>
+                          <div style={{display:"flex",gap:2}}>
+                            {[1,2,3].map(n=>(
+                              <div key={n} style={{width:14,height:4,borderRadius:2,background:n<=imp.magnitude?magCol[imp.magnitude]:C.bg2}}/>
+                            ))}
+                          </div>
+                          <div style={{fontFamily:F.mono,fontSize:8,color:magCol[imp.magnitude],marginTop:2}}>{magLabel[imp.magnitude]}</div>
+                        </div>
+                        {/* Mechanism summary */}
+                        <div style={{fontFamily:F.body,fontSize:11,color:C.text2,lineHeight:1.5}}>{imp.mechanism}</div>
+                        {/* Expand chevron */}
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,marginTop:2,transform:isExp?"rotate(180deg)":"rotate(0)",transition:"transform 0.15s"}}><polyline points="6 9 12 15 18 9"/></svg>
+                      </div>
+
+                      {/* Expanded detail */}
+                      {isExp&&(
+                        <div style={{padding:"0 20px 16px",marginTop:-6}}>
+                          {/* Tickers */}
+                          <div style={{marginBottom:12}}>
+                            <div style={{fontFamily:F.body,fontSize:9,fontWeight:600,color:C.textM,textTransform:"uppercase",letterSpacing:0.6,marginBottom:6}}>Exposed Instruments</div>
+                            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                              {imp.tickers.map(t=>(
+                                <span key={t} style={{fontFamily:F.mono,fontSize:10,fontWeight:700,color:C.text,background:C.bg2,border:"1px solid "+C.border,padding:"3px 8px",borderRadius:6}}>{t}</span>
+                              ))}
+                            </div>
+                          </div>
+                          {/* Detail */}
+                          <div style={{marginBottom:12}}>
+                            <div style={{fontFamily:F.body,fontSize:9,fontWeight:600,color:C.textM,textTransform:"uppercase",letterSpacing:0.6,marginBottom:5}}>Analysis</div>
+                            <div style={{fontFamily:F.body,fontSize:12,color:C.text,lineHeight:1.65}}>{imp.detail}</div>
+                          </div>
+                          {/* Risk */}
+                          <div style={{background:"rgba(196,30,58,0.04)",border:"1px solid rgba(196,30,58,0.10)",borderRadius:8,padding:"10px 12px"}}>
+                            <div style={{fontFamily:F.body,fontSize:9,fontWeight:600,color:"#c41e3a",textTransform:"uppercase",letterSpacing:0.6,marginBottom:4}}>Key Risk</div>
+                            <div style={{fontFamily:F.body,fontSize:11,color:C.text,lineHeight:1.55}}>{imp.risk}</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+        {sorted.length===0&&(
+          <div style={{textAlign:"center",padding:"40px 0",fontFamily:F.body,fontSize:13,color:C.textM}}>No bills tracked for this sector.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function SCOTUSScreen({nav}){
 const[filter,setFilter]=useState("All");
 const[sel,setSel]=useState(null);
@@ -4762,10 +5215,64 @@ return(
           <div style={{fontFamily:F.body,fontSize:12,color:C.text2,fontWeight:300,lineHeight:1.7}}>{econ.analysis}</div>
         </div>
 
-        {econ.distributionNote&&<div style={{display:"flex",gap:10,alignItems:"flex-start",padding:"12px 14px",background:"rgba(220,38,38,0.04)",borderRadius:12,border:"1px solid rgba(220,38,38,0.12)"}}>
+        {econ.distributionNote&&<div style={{display:"flex",gap:10,alignItems:"flex-start",padding:"12px 14px",background:"rgba(220,38,38,0.04)",borderRadius:12,border:"1px solid rgba(220,38,38,0.12)",marginTop:14}}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8b2e2e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,marginTop:1}}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           <span style={{fontFamily:F.body,fontSize:11,color:"#8b2e2e",fontWeight:300,lineHeight:1.6}}>{econ.distributionNote}</span>
         </div>}
+
+        {/* Market Impact — pulled from FINANCE_BILLS */}
+        {(()=>{
+          const fb=FINANCE_BILLS.find(x=>x.billId===bill.id);
+          if(!fb)return null;
+          const magLabel=["","Minor","Moderate","Major"];
+          const magCol=["","#b45309","#1e40af","#c41e3a"];
+          return(
+            <div style={{marginTop:14}}>
+              <div style={{background:C.card,borderRadius:16,border:"1px solid "+C.border,overflow:"hidden",boxShadow:C.cardShadow}}>
+                <div style={{padding:"14px 20px",borderBottom:"1px solid "+C.border,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                  <div style={{fontFamily:F.display,fontSize:13,fontWeight:600,color:C.text}}>Market Impact</div>
+                  {fb.passProb<100&&<span style={{fontFamily:F.body,fontSize:10,color:C.textM}}>{fb.passProb}% enactment probability</span>}
+                </div>
+                {fb.sectors.map((sk,si)=>{
+                  const imp=fb.impacts[sk];
+                  if(!imp)return null;
+                  const col=imp.dir>0?"#15803d":imp.dir<0?"#c41e3a":"#b45309";
+                  const secDef=FINANCE_SECTORS.find(s=>s.key===sk);
+                  return(
+                    <div key={sk} style={{borderBottom:si<fb.sectors.length-1?"1px solid "+C.border:"none",padding:"14px 20px"}}>
+                      {/* Sector header */}
+                      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                        <span style={{fontFamily:F.display,fontSize:12,fontWeight:600,color:C.text,minWidth:90}}>{secDef?.label||sk}</span>
+                        <span style={{fontFamily:F.mono,fontSize:11,fontWeight:700,color:col}}>{imp.dir>0?"↑":imp.dir<0?"↓":"→"} {imp.label}</span>
+                        <div style={{display:"flex",gap:2,marginLeft:4}}>
+                          {[1,2,3].map(n=>(
+                            <div key={n} style={{width:12,height:4,borderRadius:2,background:n<=imp.magnitude?magCol[imp.magnitude]:C.bg2}}/>
+                          ))}
+                        </div>
+                        <span style={{fontFamily:F.mono,fontSize:9,color:magCol[imp.magnitude]}}>{magLabel[imp.magnitude]}</span>
+                      </div>
+                      {/* Tickers */}
+                      <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:8}}>
+                        {imp.tickers.map(t=>(
+                          <span key={t} style={{fontFamily:F.mono,fontSize:9,fontWeight:700,color:C.text,background:C.bg2,border:"1px solid "+C.border,padding:"2px 7px",borderRadius:5}}>{t}</span>
+                        ))}
+                      </div>
+                      {/* Mechanism */}
+                      <div style={{fontFamily:F.body,fontSize:11,color:C.text2,lineHeight:1.6,marginBottom:8}}>{imp.mechanism}</div>
+                      {/* Detail */}
+                      <div style={{fontFamily:F.body,fontSize:11,color:C.text2,lineHeight:1.6,marginBottom:8}}>{imp.detail}</div>
+                      {/* Risk */}
+                      <div style={{display:"flex",gap:8,alignItems:"flex-start",padding:"8px 10px",background:"rgba(196,30,58,0.04)",borderRadius:8,border:"1px solid rgba(196,30,58,0.09)"}}>
+                        <span style={{fontFamily:F.mono,fontSize:8,fontWeight:700,color:"#c41e3a",flexShrink:0,paddingTop:1}}>RISK</span>
+                        <span style={{fontFamily:F.body,fontSize:11,color:C.text2,lineHeight:1.55}}>{imp.risk}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
       </div>}
 
       {/* NEWS TAB */}
@@ -5255,13 +5762,13 @@ const toggleM=useCallback((id)=>{
 const nav=useCallback((action,param)=>{if(action==="back")setStack(s=>s.slice(0,-1));else setStack(s=>[...s,{type:action,id:param}])},[]);
 const switchTab=useCallback(t=>{setTab(t);setStack([])},[]);
 const cur=stack.length>0?stack[stack.length-1]:null;
-const tabDefs=[{key:"home",label:"Home",icon:"home",color:"#8b2e2e",activeBg:"#fef2f2"},{key:"bills",label:"Bills",icon:"filetext",color:"#2d6a4f",activeBg:"#f0f4f2"},{key:"members",label:"Members",icon:"person",color:"#d97706",activeBg:"#fef9f3"},{key:"scotus",label:"Court",icon:"gavel",color:"#1e40af",activeBg:"#eff6ff"},{key:"pulse",label:"Calendar",icon:"calendar",color:"#7c3aed",activeBg:"#f5f3ff"},{key:"saved",label:"Saved",icon:"bookmark",color:"#b45309",activeBg:"#fff7ed"},{key:"profile",label:"Profile",icon:"person",color:"#166534",activeBg:"#f0fdf4"}];
+const tabDefs=[{key:"home",label:"Home",icon:"home",color:"#8b2e2e",activeBg:"#fef2f2"},{key:"bills",label:"Bills",icon:"filetext",color:"#2d6a4f",activeBg:"#f0f4f2"},{key:"members",label:"Members",icon:"person",color:"#d97706",activeBg:"#fef9f3"},{key:"finance",label:"Markets",icon:"trending",color:"#15803d",activeBg:"#f0fdf4"},{key:"scotus",label:"Court",icon:"gavel",color:"#1e40af",activeBg:"#eff6ff"},{key:"pulse",label:"Calendar",icon:"calendar",color:"#7c3aed",activeBg:"#f5f3ff"},{key:"saved",label:"Saved",icon:"bookmark",color:"#b45309",activeBg:"#fff7ed"},{key:"profile",label:"Profile",icon:"person",color:"#166534",activeBg:"#f0fdf4"}];
 const screen=()=>{
 if(cur?.type==="billDetail")return <BillDetailScreen billId={cur.id} nav={nav} wb={wb} toggleB={toggleB} newsOutlet={newsOutlet}/>;
 if(cur?.type==="memberProfile")return <MemberProfileScreen memberId={cur.id} nav={nav} wm={wm} toggleM={toggleM} isPremium={isPremium}/>;
 if(cur?.type==="browseMembers")return <BrowseMembersScreen nav={nav} wm={wm} toggleM={toggleM}/>;
 if(cur?.type==="topicDetail"){const topic=trending.find(t=>t.name===cur.id);if(topic)return <TopicDetailScreen topic={topic} nav={nav} wb={wb} toggleB={toggleB}/>;}
-switch(tab){case"home":return <HomeScreen nav={nav} wb={wb} toggleB={toggleB} wm={wm} toggleM={toggleM} newsOutlet={newsOutlet} switchTab={switchTab} isPremium={isPremium} openUpgrade={openUpgrade}/>;case"bills":return <BillsScreen nav={nav} wb={wb} toggleB={toggleB}/>;case"members":return <MembersScreen nav={nav} wm={wm} toggleM={toggleM}/>;case"scotus":return <SCOTUSScreen nav={nav}/>;case"search":return <SearchScreen nav={nav} wm={wm} toggleM={toggleM}/>;case"pulse":return <CalendarScreen nav={nav}/>;case"saved":return <WatchlistScreen nav={nav} wb={wb} toggleB={toggleB} wm={wm} toggleM={toggleM} profile={profile} isPremium={isPremium} openUpgrade={openUpgrade}/>;case"profile":return <ProfileScreen profile={profile} setProfile={saveProfile} wb={wb} wm={wm} user={user} onSignOut={signOut} isPremium={isPremium} setIsPremium={setIsPremium} switchTab={switchTab} newsOutlet={newsOutlet} setNewsOutlet={setNewsOutlet} openUpgrade={openUpgrade}/>;default:return null}};
+switch(tab){case"home":return <HomeScreen nav={nav} wb={wb} toggleB={toggleB} wm={wm} toggleM={toggleM} newsOutlet={newsOutlet} switchTab={switchTab} isPremium={isPremium} openUpgrade={openUpgrade}/>;case"bills":return <BillsScreen nav={nav} wb={wb} toggleB={toggleB}/>;case"members":return <MembersScreen nav={nav} wm={wm} toggleM={toggleM}/>;case"finance":return <FinanceScreen nav={nav} wb={wb} toggleB={toggleB}/>;case"scotus":return <SCOTUSScreen nav={nav}/>;case"search":return <SearchScreen nav={nav} wm={wm} toggleM={toggleM}/>;case"pulse":return <CalendarScreen nav={nav}/>;case"saved":return <WatchlistScreen nav={nav} wb={wb} toggleB={toggleB} wm={wm} toggleM={toggleM} profile={profile} isPremium={isPremium} openUpgrade={openUpgrade}/>;case"profile":return <ProfileScreen profile={profile} setProfile={saveProfile} wb={wb} wm={wm} user={user} onSignOut={signOut} isPremium={isPremium} setIsPremium={setIsPremium} switchTab={switchTab} newsOutlet={newsOutlet} setNewsOutlet={setNewsOutlet} openUpgrade={openUpgrade}/>;default:return null}};
 // Show loading while checking auth, then show auth screen if no user
 if(!authChecked)return(<div style={{minHeight:"100vh",background:C.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{textAlign:"center"}}><div style={{width:44,height:44,borderRadius:10,background:"linear-gradient(135deg,#c41e3a,#e8394d)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",boxShadow:"0 4px 20px rgba(196,30,58,0.35)"}}><span style={{color:"#fff",fontWeight:700,fontSize:20,fontFamily:F.display}}>C</span></div><div style={{fontFamily:F.body,color:C.textM,fontSize:13,letterSpacing:0.2}}>Loading…</div></div></div>);
 if(!user&&!guestMode)return <AuthScreen onContinueAsGuest={()=>setGuestMode(true)}/>;
@@ -5361,6 +5868,8 @@ return(
 html,body{margin:0;padding:0;font-family:'DM Sans',system-ui,sans-serif;background:#f0f2f7;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(26,77,184,0.055) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 80% 100%,rgba(196,30,58,0.04) 0%,transparent 60%);pointer-events:none;z-index:0;}
 *{-webkit-tap-highlight-color:transparent;box-sizing:border-box;}
+/* Promote panels and heavy containers to their own compositor layer */
+.civly-panel{will-change:transform;contain:layout style;}
 @keyframes civlyFadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes civlyFadeIn{from{opacity:0}to{opacity:1}}
 @keyframes civlyPop{0%{transform:scale(0.94);opacity:0}60%{transform:scale(1.02)}100%{transform:scale(1);opacity:1}}

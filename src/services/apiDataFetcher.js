@@ -105,7 +105,22 @@ function getMemberYears(member) {
   return earliest === 9999 ? 0 : new Date().getFullYear() - earliest;
 }
 
+const BILLS_CACHE_KEY = 'civly-api-bills-v1';
+const BILLS_CACHE_TS_KEY = 'civly-api-bills-ts';
+const BILLS_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
 export async function fetchBillsFromAPI(sinceDateTime = null) {
+  // Return cached data if fresh (skip cache for incremental fetches)
+  if (!sinceDateTime) {
+    try {
+      const cached = localStorage.getItem(BILLS_CACHE_KEY);
+      const ts = localStorage.getItem(BILLS_CACHE_TS_KEY);
+      if (cached && ts && Date.now() - parseInt(ts, 10) < BILLS_CACHE_TTL) {
+        return JSON.parse(cached);
+      }
+    } catch {}
+  }
+
   try {
     const hasTitle = t => t && t.trim() !== '' && t.toLowerCase() !== 'untitled' && t.toLowerCase() !== 'undefined';
 
@@ -174,7 +189,14 @@ export async function fetchBillsFromAPI(sinceDateTime = null) {
       }
     }
 
-    return merged.map(mapBill);
+    const result = merged.map(mapBill);
+    if (!sinceDateTime) {
+      try {
+        localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(result));
+        localStorage.setItem(BILLS_CACHE_TS_KEY, String(Date.now()));
+      } catch {}
+    }
+    return result;
   } catch (error) {
     console.error('Error fetching bills:', error);
     return [];

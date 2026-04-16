@@ -5,7 +5,12 @@
       "Bash(python3:*)",
       "Bash(npm run build:*)",
       "Bash(ps -p 50217 -o pid,command)",
-      "Bash(ps -p 52834 -o pid,command)"
+      "Bash(ps -p 52834 -o pid,command)",
+      "Bash(npx react-scripts:*)",
+      "mcp__claude_ai_Figma__generate_diagram",
+      "Bash(git remote:*)",
+      "Bash(git push:*)",
+      "Bash(gh auth:*)"
     ]
   }
 }
